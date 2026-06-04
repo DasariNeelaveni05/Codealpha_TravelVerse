@@ -18,7 +18,7 @@
                 {% if user.is_authenticated %}
                 <a href="{% url 'social:profile_detail' user.username %}">My Profile</a>
                 <a href="{% url 'social:post_create' %}">New Post</a>
-                <a href="{% url 'social:logout' %}">Logout</a>
+                <form method="post" action="{% url 'social:logout' %}" style="display:inline;">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Logout</button></form>
                 {% else %}
                 <a href="{% url 'social:login' %}">Login</a>
                 <a href="{% url 'social:register' %}">Sign Up</a>
