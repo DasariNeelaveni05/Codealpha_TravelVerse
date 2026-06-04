@@ -23,7 +23,7 @@ from .forms import (
     SignUpForm,
     TravelCompanionForm,
 )
-from .gamification import CONTINENT_BY_COUNTRY, get_travel_statistics, map_pins_for_stamps, sync_user_achievements
+from .gamification import CONTINENT_BY_COUNTRY, get_travel_statistics, map_pins_for_stamps
 from .map_data import COUNTRY_COORDS, map_markers_from_posts
 from .models import (
     Blog,
@@ -45,18 +45,8 @@ from .models import (
 )
 from .placeholders import DEMO_DESTINATIONS
 from .services import sidebar_widgets, update_post_gem_score
-from .utils import validate_image_upload
+from .utils import refresh_user_score, toggle_instance, validate_image_upload
 
-POST_CATEGORIES = [
-    ('beach', 'Beaches'),
-    ('mountain', 'Mountains'),
-    ('adventure', 'Adventure'),
-    ('historical', 'Historical Places'),
-    ('food', 'Food Destinations'),
-    ('nature', 'Nature'),
-    ('island', 'Islands'),
-    ('budget', 'Budget Travel'),
-]
 
 
 def _json_error(message, status=400):
@@ -170,8 +160,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            user.profile.recalculate_explorer_score()
-            sync_user_achievements(user)
+            refresh_user_score(user)
             messages.success(request, 'Welcome to TravelVerse! Start exploring hidden gems.')
             return redirect('feed')
         messages.error(request, 'Please fix the errors below to create your account.')
@@ -203,7 +192,7 @@ def profile_view(request, username):
     if request.user != profile_user:
         is_following = Follow.objects.filter(follower=request.user, following=profile_user).exists()
     travel_stats = get_travel_statistics(profile_user)
-    sync_user_achievements(profile_user)
+    refresh_user_score(profile_user)
     stamps = profile_user.passport_stamps.all()
     timeline = stamps.select_related('post')[:15]
     ctx = {
@@ -283,8 +272,7 @@ def create_post(request):
             _stamp_from_post(request.user, post)
             _geocode_post(post)
             update_post_gem_score(post)
-            request.user.profile.recalculate_explorer_score()
-            sync_user_achievements(request.user)
+            refresh_user_score(request.user)
             messages.success(request, 'Your travel post is live!')
             return redirect('feed')
         messages.error(request, 'Please correct the errors below.')
@@ -301,8 +289,7 @@ def create_reel(request):
             reel = form.save(commit=False)
             reel.author = request.user
             reel.save()
-            request.user.profile.recalculate_explorer_score()
-            sync_user_achievements(request.user)
+            refresh_user_score(request.user)
             messages.success(request, 'Reel uploaded!')
             return redirect('reels')
     else:
@@ -325,8 +312,7 @@ def create_blog(request):
                 n += 1
             blog.slug = slug
             blog.save()
-            request.user.profile.recalculate_explorer_score()
-            sync_user_achievements(request.user)
+            refresh_user_score(request.user)
             messages.success(request, 'Travelogue published!')
             return redirect('blog_detail', slug=blog.slug)
     else:
@@ -409,7 +395,7 @@ def search_view(request):
         'category': category,
         'users': users,
         'locations': locations,
-        'categories': POST_CATEGORIES,
+        'categories': Post.CATEGORY_CHOICES,
         **_sidebar_context(request),
     })
 
@@ -423,7 +409,7 @@ def bucket_list_view(request):
             item = form.save(commit=False)
             item.user = request.user
             item.save()
-            sync_user_achievements(request.user)
+            refresh_user_score(request.user)
             messages.success(request, f'Added {item.destination_name} to your travel planner.')
             return redirect('bucket_list')
         messages.error(request, 'Could not add destination. Please check the form.')
@@ -471,7 +457,7 @@ def passport_view(request):
 
 @login_required
 def stats_dashboard(request):
-    new_achievements = sync_user_achievements(request.user)
+    new_achievements = refresh_user_score(request.user)
     travel_stats = get_travel_statistics(request.user)
     return render(request, 'stats_dashboard.html', {
         'travel_stats': travel_stats,
@@ -491,12 +477,8 @@ def saved_posts_view(request):
 @require_POST
 def toggle_like(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    like, created = Like.objects.get_or_create(user=request.user, post=post)
-    if not created:
-        like.delete()
-        liked = False
-    else:
-        liked = True
+    _, liked = toggle_instance(Like, user=request.user, post=post)
+    if liked:
         _notify(post.author, request.user, 'like', f'{request.user.username} liked your post', post)
         post.author.profile.recalculate_explorer_score()
     update_post_gem_score(post)
@@ -512,12 +494,7 @@ def toggle_like(request, post_id):
 @require_POST
 def toggle_reel_like(request, reel_id):
     reel = get_object_or_404(Reel, pk=reel_id)
-    like, created = ReelLike.objects.get_or_create(user=request.user, reel=reel)
-    if not created:
-        like.delete()
-        liked = False
-    else:
-        liked = True
+    _, liked = toggle_instance(ReelLike, user=request.user, reel=reel)
     return JsonResponse({
         'ok': True,
         'liked': liked,
@@ -547,7 +524,7 @@ def add_comment(request, post_id):
     if parent:
         _notify(parent.user, request.user, 'reply', f'{request.user.username} replied to your comment', post)
     update_post_gem_score(post)
-    post.author.profile.recalculate_explorer_score()
+    refresh_user_score(post.author)
     return JsonResponse({
         'ok': True,
         'comment': {
@@ -567,12 +544,8 @@ def toggle_follow(request, username):
     target = get_object_or_404(User, username=username)
     if target == request.user:
         return _json_error('You cannot follow yourself.')
-    follow, created = Follow.objects.get_or_create(follower=request.user, following=target)
-    if not created:
-        follow.delete()
-        following = False
-    else:
-        following = True
+    _, following = toggle_instance(Follow, follower=request.user, following=target)
+    if following:
         _notify(target, request.user, 'follow', f'{request.user.username} started following you')
         target.profile.recalculate_explorer_score()
     return JsonResponse({
@@ -601,12 +574,7 @@ def toggle_bucket(request, post_id):
 @require_POST
 def toggle_save_post(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    saved_obj, created = SavedPost.objects.get_or_create(user=request.user, post=post)
-    if not created:
-        saved_obj.delete()
-        saved = False
-    else:
-        saved = True
+    _, saved = toggle_instance(SavedPost, user=request.user, post=post)
     update_post_gem_score(post)
     return JsonResponse({'ok': True, 'saved': saved, 'gem_score': post.hidden_gem_score})
 
@@ -615,15 +583,12 @@ def toggle_save_post(request, post_id):
 @require_POST
 def vote_hidden_gem(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    vote, created = HiddenGemVote.objects.get_or_create(user=request.user, post=post)
-    if not created:
-        vote.delete()
-        post.gem_votes = max(0, post.gem_votes - 1)
-        voted = False
-    else:
+    _, voted = toggle_instance(HiddenGemVote, user=request.user, post=post)
+    if voted:
         post.gem_votes += 1
-        voted = True
         _notify(post.author, request.user, 'gem_vote', f'{request.user.username} voted for your hidden gem', post)
+    else:
+        post.gem_votes = max(0, post.gem_votes - 1)
     post.save(update_fields=['gem_votes'])
     update_post_gem_score(post)
     return JsonResponse({

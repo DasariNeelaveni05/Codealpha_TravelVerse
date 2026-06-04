@@ -1,7 +1,7 @@
 from django import template
 
-from social.gamification import is_certified_hidden_gem
 from social.placeholders import placeholder_for_bucket, placeholder_for_post
+from social.utils import is_certified_gem
 
 register = template.Library()
 
@@ -19,7 +19,7 @@ def gem_score_label(score):
 
 @register.filter
 def certified_gem(post):
-    return is_certified_hidden_gem(post)
+    return is_certified_gem(post)
 
 
 @register.simple_tag

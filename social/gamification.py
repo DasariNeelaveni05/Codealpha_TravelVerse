@@ -61,8 +61,8 @@ CONTINENT_BY_COUNTRY = {
 
 
 def _received_likes(user):
-    from .models import Like
-    return Like.objects.filter(post__author=user).count()
+    from .utils import received_likes_count
+    return received_likes_count(user)
 
 
 def badge_tier_for_score(score):
@@ -151,9 +151,15 @@ def calculate_hidden_gem_score(post):
 
 
 def is_certified_hidden_gem(post):
-    """Community-certified when votes and score thresholds are met."""
-    score = post.hidden_gem_score if hasattr(post, 'hidden_gem_score') else calculate_hidden_gem_score(post)
-    return post.is_hidden_gem and post.gem_votes >= 3 and score >= 35
+    """Community-certified when votes and score thresholds are met.
+
+    Delegates to ``utils.is_certified_gem`` for the threshold constants.
+    """
+    from .utils import is_certified_gem
+
+    if not hasattr(post, 'hidden_gem_score') or post.hidden_gem_score is None:
+        post.hidden_gem_score = calculate_hidden_gem_score(post)
+    return is_certified_gem(post)
 
 
 def sync_user_achievements(user):
@@ -209,7 +215,9 @@ def get_travel_statistics(user):
     gems_discovered = user.posts.filter(is_hidden_gem=True).count()
     from .models import Comment
 
-    received_likes = Like.objects.filter(post__author=user).count()
+    from .utils import received_likes_count
+
+    received_likes = received_likes_count(user)
     received_comments = Comment.objects.filter(post__author=user).count()
     followers = user.followers_set.count()
     following = user.following_set.count()
