@@ -1,8 +1,14 @@
+import logging
 import random
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.utils.text import slugify
+
 from social.models import Post, Reel, Profile, Comment, Like, Follow
+
+logger = logging.getLogger(__name__)
 
 SAMPLE_FIRST = ['Ava','Liam','Noah','Olivia','Emma','Oliver','Sophia','Mia','Lucas','Amelia']
 SAMPLE_LAST = ['Walker','Singh','Patel','Garcia','Kim','Nguyen','Brown','Wilson','Martin','Lee']
@@ -68,8 +74,10 @@ class Command(BaseCommand):
                 if other != user:
                     try:
                         Like.objects.create(user=other, post=post)
+                    except IntegrityError:
+                        pass  # duplicate like, expected
                     except Exception:
-                        pass
+                        logger.warning('Failed to create demo like for post %d', post.pk, exc_info=True)
 
             for r in range(reels_per):
                 thumb = random.choice(SAMPLE_IMAGES)
@@ -88,8 +96,10 @@ class Command(BaseCommand):
             for followee in random.sample(others, min(3, len(others))):
                 try:
                     Follow.objects.create(follower=a, following=followee)
+                except IntegrityError:
+                    pass  # duplicate follow, expected
                 except Exception:
-                    pass
+                    logger.warning('Failed to create demo follow %s -> %s', a.username, followee.username, exc_info=True)
 
         self.stdout.write(self.style.SUCCESS(
             f'Generated {len(created_users)} users, {created_posts} posts, {created_reels} reels.'
