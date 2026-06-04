@@ -86,7 +86,7 @@ def _sidebar_context(request):
     return sidebar_widgets(request)
 
 
-def _feed_posts(user, page=1, per_page=6):
+def _feed_posts(user, page=1, per_page=6, category=None):
     if user.is_authenticated:
         following_ids = user.following_set.values_list('following_id', flat=True)
         qs = Post.objects.filter(
@@ -94,6 +94,9 @@ def _feed_posts(user, page=1, per_page=6):
         ).distinct()
     else:
         qs = Post.objects.all()
+    valid_categories = {choice[0] for choice in Post.CATEGORY_CHOICES}
+    if category in valid_categories:
+        qs = qs.filter(category=category)
     qs = qs.select_related('author', 'author__profile').prefetch_related('images', 'likes')
     if user.is_authenticated:
         qs = qs.annotate(
@@ -147,7 +150,8 @@ def landing(request):
 @login_required
 def feed(request):
     page = request.GET.get('page', 1)
-    posts = _feed_posts(request.user, page)
+    category = request.GET.get('category')
+    posts = _feed_posts(request.user, page, category=category)
     all_for_map = list(posts.object_list) if hasattr(posts, 'object_list') else list(posts)
     map_markers = map_markers_from_posts(
         Post.objects.filter(is_hidden_gem=True).select_related('author')[:30]
