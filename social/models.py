@@ -14,11 +14,13 @@ from .utils import explorer_badge
 class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    bio = models.TextField(blank=True, max_length=500)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar_url = models.URLField(blank=True)
+    bio = models.TextField(blank=True, max_length=300)
     location = models.CharField(max_length=150, blank=True)
     website = models.URLField(blank=True)
     explorer_score = models.PositiveIntegerField(default=0)
+    countries_visited = models.TextField(blank=True, default='[]')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,6 +60,22 @@ class Profile(models.Model):
         self.explorer_score += points
         self.save(update_fields=['explorer_score', 'updated_at'])
 
+    def get_avatar(self):
+        if self.avatar:
+            return self.avatar.url
+        if self.avatar_url:
+            return self.avatar_url
+        return 'https://i.pravatar.cc/150?u=' + self.user.username
+
+    def get_badge(self):
+        if self.explorer_score >= 10000:
+            return ('Platinum', '🥇')
+        if self.explorer_score >= 5000:
+            return ('Gold', '🏅')
+        if self.explorer_score >= 2000:
+            return ('Silver', '🥈')
+        return ('Bronze', '🥉')
+
     def recalculate_explorer_score(self):
         """Gamification score from posts, engagement, followers, and travel activity."""
         user = self.user
@@ -79,6 +97,13 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+
+class UserProfile(Profile):
+    class Meta:
+        proxy = True
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
 
 
 class Post(models.Model):
@@ -111,6 +136,8 @@ class Post(models.Model):
 
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     caption = models.TextField(blank=True, max_length=2200)
+    image = models.ImageField(upload_to='posts/', blank=True, null=True)
+    image_url = models.URLField(blank=True)
     location = models.CharField(max_length=200)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
@@ -158,7 +185,10 @@ class Post(models.Model):
     def primary_image(self):
         first = self.images.first()
         return first.image if first else None
-
+    def get_image(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or ''
     @property
     def save_count(self):
         return self.saved_by.count()
@@ -180,10 +210,15 @@ class PostImage(models.Model):
 
 class Reel(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reels')
-    video = models.FileField(upload_to='reels/')
+    title = models.CharField(max_length=200, blank=True)
+    video = models.FileField(upload_to='reels/', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='reels/thumbs/', blank=True, null=True)
+    thumbnail_url = models.URLField(blank=True)
     caption = models.TextField(blank=True, max_length=500)
     location = models.CharField(max_length=200, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -192,6 +227,12 @@ class Reel(models.Model):
     @property
     def like_count(self):
         return self.reel_likes.count()
+    
+    @property
+    def display_thumbnail(self):
+        if self.thumbnail:
+            return self.thumbnail.url
+        return self.thumbnail_url or ''
 
 
 class Blog(models.Model):
@@ -225,6 +266,10 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+    @property
+    def author(self):
+        return self.user
 
 
 class Like(models.Model):
@@ -382,22 +427,30 @@ class Notification(models.Model):
 class GuideProfile(models.Model):
     """Local guide who can be discovered and contacted by first-time visitors."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='guide_profile')
+    destinations = models.TextField(blank=True, help_text='Comma-separated cities')
     destination_expertise = models.TextField(
         help_text='JSON list of cities, e.g. ["Ooty","Kodaikanal"]', blank=True, default='[]'
     )
     languages = models.CharField(max_length=200, blank=True, default='English')
     experience_years = models.PositiveSmallIntegerField(default=1)
-    hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    daily_rate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    price_per_day = models.DecimalField(max_digits=8, decimal_places=2, default=1500)
     rating = models.FloatField(default=5.0)
     total_tours = models.PositiveIntegerField(default=0)
     bio = models.TextField(blank=True)
+    is_verified = models.BooleanField(default=False)
+    is_available = models.BooleanField(default=True)
+    whatsapp_number = models.CharField(max_length=20, blank=True)
+    profile_image_url = models.URLField(blank=True)
+    speciality = models.CharField(max_length=200, blank=True)
     certifications = models.TextField(blank=True)
     availability_status = models.BooleanField(default=True)
     response_time = models.CharField(max_length=60, default='Within an hour')
     phone = models.CharField(max_length=20, blank=True)
     whatsapp = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-rating', '-total_tours']
 
     class Meta:
         ordering = ['-rating', '-total_tours']
@@ -435,22 +488,30 @@ class GuideRequest(models.Model):
 class Destination(models.Model):
     """Rich destination metadata used for first-timer guide widgets."""
     name = models.CharField(max_length=200, unique=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    description = models.TextField(blank=True)
+    best_time = models.CharField(max_length=200, blank=True)
+    budget_per_day = models.CharField(max_length=50, blank=True)
+    language_tip = models.CharField(max_length=200, blank=True)
+    safety_tips = models.TextField(blank=True)
+    local_food = models.TextField(blank=True)
+    how_to_reach = models.TextField(blank=True)
+    cover_image_url = models.URLField(blank=True)
+    crowd_level = models.CharField(max_length=20, default='moderate')
+    safety_rating = models.PositiveSmallIntegerField(default=4)
+    budget_tier = models.CharField(max_length=4, default='$$')
     best_season_json = models.TextField(
         default='{}',
         help_text='JSON: {"Jan":"green","Feb":"yellow",...}'
     )
-    crowd_level = models.CharField(max_length=20, default='moderate')
-    safety_rating = models.PositiveSmallIntegerField(default=4)
-    budget_tier = models.CharField(max_length=4, default='$$')
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     best_time_to_visit = models.CharField(max_length=100, blank=True)
     getting_there = models.TextField(blank=True)
     local_transport = models.TextField(blank=True)
     must_visit_spots = models.TextField(blank=True)
-    local_food = models.TextField(blank=True)
-    safety_tips = models.TextField(blank=True)
     estimated_budget_per_day = models.CharField(max_length=60, blank=True)
     language_tips = models.TextField(blank=True)
     emergency_numbers = models.TextField(blank=True)
