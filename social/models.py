@@ -602,6 +602,183 @@ class Reaction(models.Model):
         return f"{self.user.username} {self.reaction_type} on post {self.post_id}"
 
 
+# ── COMMUNITY MODELS ────────────────────────────────────────────
+
+
+class ChatRoom(models.Model):
+    """Community chat rooms: global, destination-based, country-based, etc."""
+    ROOM_TYPES = [
+        ('global', 'Global Chat'),
+        ('destination', 'Destination Chat'),
+        ('country', 'Country Chat'),
+        ('solo', 'Solo Traveler Chat'),
+        ('backpacker', 'Backpacker Chat'),
+        ('custom', 'Custom Chat'),
+    ]
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True)
+    room_type = models.CharField(max_length=20, choices=ROOM_TYPES, default='global')
+    description = models.TextField(blank=True, max_length=500)
+    icon = models.CharField(max_length=10, default='💬')
+    members = models.ManyToManyField(User, related_name='chat_rooms', blank=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-is_default', 'name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def member_count(self):
+        return self.members.count()
+
+    @property
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+
+
+class ChatMessage(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages')
+    text = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.user.username}: {self.text[:50]}"
+
+
+class TravelGroup(models.Model):
+    """Travel interest groups: beaches, mountains, food, etc."""
+    CATEGORY_CHOICES = [
+        ('beach', 'Beaches'),
+        ('mountain', 'Mountains'),
+        ('food', 'Food & Culinary'),
+        ('nature', 'Nature & Wildlife'),
+        ('island', 'Islands'),
+        ('adventure', 'Adventure'),
+        ('cultural', 'Cultural'),
+        ('budget', 'Budget Travel'),
+        ('luxury', 'Luxury Travel'),
+        ('solo', 'Solo Travel'),
+        ('photography', 'Travel Photography'),
+    ]
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    description = models.TextField(blank=True, max_length=800)
+    icon = models.CharField(max_length=10, default='🌍')
+    cover_url = models.URLField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_groups')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def member_count(self):
+        return self.memberships.count()
+
+
+class GroupMembership(models.Model):
+    ROLE_CHOICES = [
+        ('member', 'Member'),
+        ('moderator', 'Moderator'),
+        ('admin', 'Admin'),
+    ]
+    group = models.ForeignKey(TravelGroup, on_delete=models.CASCADE, related_name='memberships')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_memberships')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='member')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} in {self.group.name}"
+
+
+class CommunityEvent(models.Model):
+    """Community events: meetups, group trips, travel challenges."""
+    EVENT_TYPES = [
+        ('meetup', 'Meetup'),
+        ('group_trip', 'Group Trip'),
+        ('challenge', 'Travel Challenge'),
+        ('workshop', 'Workshop'),
+        ('virtual', 'Virtual Hangout'),
+    ]
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='meetup')
+    description = models.TextField(blank=True, max_length=2000)
+    location = models.CharField(max_length=200, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    max_attendees = models.PositiveIntegerField(default=50)
+    cover_url = models.URLField(blank=True)
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['start_date', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def attendee_count(self):
+        return self.rsvps.filter(status='going').count()
+
+    @property
+    def spots_left(self):
+        return max(0, self.max_attendees - self.attendee_count)
+
+
+class EventRSVP(models.Model):
+    STATUS_CHOICES = [
+        ('going', 'Going'),
+        ('interested', 'Interested'),
+        ('not_going', 'Not Going'),
+    ]
+    event = models.ForeignKey(CommunityEvent, on_delete=models.CASCADE, related_name='rsvps')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_rsvps')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='interested')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'user')
+
+
+class TripJoinRequest(models.Model):
+    """Request to join a travel companion trip."""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+    trip = models.ForeignKey(TravelCompanion, on_delete=models.CASCADE, related_name='join_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trip_requests')
+    message = models.TextField(blank=True, max_length=500)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('trip', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} → {self.trip.destination} ({self.status})"
+
+
 # ── BACKWARD-COMPAT RE-EXPORTS ───────────────────────────────────
 def trending_posts(limit=5):
     from .services import trending_posts as _trending

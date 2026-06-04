@@ -29,6 +29,12 @@ urlpatterns = [
     path('passport/', views.passport_view, name='passport'),
     path('stats/', views.stats_dashboard, name='stats'),
     path('saved/', views.saved_posts_view, name='saved'),
+    # Community hub
+    path('community/', views.community_hub, name='community'),
+    path('community/chat/<slug:slug>/', views.chat_room_view, name='chat_room'),
+    path('community/group/<slug:slug>/', views.group_detail, name='group_detail'),
+    path('community/event/<slug:slug>/', views.event_detail, name='event_detail'),
+    # APIs
     path('api/like/<int:post_id>/', views.toggle_like, name='toggle_like'),
     path('api/reel/like/<int:reel_id>/', views.toggle_reel_like, name='toggle_reel_like'),
     path('api/comment/<int:post_id>/', views.add_comment, name='add_comment'),
@@ -36,4 +42,8 @@ urlpatterns = [
     path('api/bucket/<int:post_id>/', views.toggle_bucket, name='toggle_bucket'),
     path('api/save/<int:post_id>/', views.toggle_save_post, name='toggle_save'),
     path('api/gem-vote/<int:post_id>/', views.vote_hidden_gem, name='gem_vote'),
+    path('api/chat/<slug:slug>/send/', views.send_chat_message, name='send_chat_message'),
+    path('api/group/<slug:slug>/join/', views.toggle_group_membership, name='toggle_group'),
+    path('api/event/<slug:slug>/rsvp/', views.toggle_event_rsvp, name='toggle_event_rsvp'),
+    path('api/trip/<int:trip_id>/join/', views.request_join_trip, name='request_join_trip'),
 ]

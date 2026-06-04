@@ -60,3 +60,25 @@ class TravelVerseTestCase(TestCase):
         # Check like count
         self.assertEqual(post.like_count, 1)
         self.assertTrue(Like.objects.filter(user=self.user2, post=post).exists())
+
+    def test_feed_category_filter(self):
+        """Feed should filter posts by the ?category= query param."""
+        from .views import _feed_posts
+        beach = Post.objects.create(
+            author=self.user1, caption="Bali beach", location="Bali",
+            country="Indonesia", category="beach", is_hidden_gem=True,
+        )
+        Post.objects.create(
+            author=self.user1, caption="Alps peak", location="Alps",
+            country="Switzerland", category="mountain", is_hidden_gem=True,
+        )
+
+        all_posts = list(_feed_posts(self.user2, page=1))
+        self.assertEqual(len(all_posts), 2)
+
+        beaches = list(_feed_posts(self.user2, page=1, category="beach"))
+        self.assertEqual([p.pk for p in beaches], [beach.pk])
+
+        # Unknown category is ignored (returns everything)
+        bogus = list(_feed_posts(self.user2, page=1, category="not-a-real-cat"))
+        self.assertEqual(len(bogus), 2)

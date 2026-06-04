@@ -97,7 +97,7 @@
         <a href="{% url 'feed' %}" class="mobile-nav-item" aria-label="Home">🏠<span>Home</span></a>
         <a href="{% url 'explore' %}" class="mobile-nav-item" aria-label="Explore">🔭<span>Explore</span></a>
         <a href="{% url 'create_post' %}" class="mobile-nav-item mobile-nav-post" aria-label="Create post">➕<span>Share</span></a>
-        <a href="{% url 'reels' %}" class="mobile-nav-item" aria-label="Reels">🎬<span>Reels</span></a>
+        <a href="{% url 'community' %}" class="mobile-nav-item" aria-label="Community">🌐<span>Community</span></a>
         {% if user.is_authenticated %}
             <a href="{% url 'profile' user.username %}" class="mobile-nav-item" aria-label="Profile">👤<span>Profile</span></a>
         {% else %}

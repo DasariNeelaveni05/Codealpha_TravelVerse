@@ -28,8 +28,13 @@ from .map_data import COUNTRY_COORDS, map_markers_from_posts
 from .models import (
     Blog,
     BucketList,
+    ChatMessage,
+    ChatRoom,
     Comment,
+    CommunityEvent,
+    EventRSVP,
     Follow,
+    GroupMembership,
     GuideProfile,
     HiddenGemVote,
     Like,
@@ -42,6 +47,8 @@ from .models import (
     ReelLike,
     SavedPost,
     TravelCompanion,
+    TravelGroup,
+    TripJoinRequest,
 )
 from .placeholders import DEMO_DESTINATIONS
 from .services import sidebar_widgets, update_post_gem_score
@@ -79,7 +86,7 @@ def _sidebar_context(request):
     return sidebar_widgets(request)
 
 
-def _feed_posts(user, page=1, per_page=6):
+def _feed_posts(user, page=1, per_page=6, category=None):
     if user.is_authenticated:
         following_ids = user.following_set.values_list('following_id', flat=True)
         qs = Post.objects.filter(
@@ -87,6 +94,9 @@ def _feed_posts(user, page=1, per_page=6):
         ).distinct()
     else:
         qs = Post.objects.all()
+    valid_categories = {choice[0] for choice in Post.CATEGORY_CHOICES}
+    if category in valid_categories:
+        qs = qs.filter(category=category)
     qs = qs.select_related('author', 'author__profile').prefetch_related('images', 'likes')
     if user.is_authenticated:
         qs = qs.annotate(
@@ -140,13 +150,20 @@ def landing(request):
 @login_required
 def feed(request):
     page = request.GET.get('page', 1)
-    posts = _feed_posts(request.user, page)
+    category = request.GET.get('category')
+    posts = _feed_posts(request.user, page, category=category)
     all_for_map = list(posts.object_list) if hasattr(posts, 'object_list') else list(posts)
     map_markers = map_markers_from_posts(
         Post.objects.filter(is_hidden_gem=True).select_related('author')[:30]
     )
+    feed_reels = Reel.objects.select_related('author', 'author__profile').all()[:6]
+    stories = Profile.objects.select_related('user').filter(
+        user__posts__isnull=False
+    ).distinct().order_by('-explorer_score')[:15]
     ctx = {
         'posts': posts,
+        'feed_reels': feed_reels,
+        'stories': stories,
         'map_markers_json': json.dumps(map_markers),
         'demo_destinations': DEMO_DESTINATIONS,
         **_sidebar_context(request),
@@ -685,3 +702,153 @@ def companions_view(request):
         'filter_destination': destination,
         **_sidebar_context(request),
     })
+
+
+# ── COMMUNITY HUB ───────────────────────────────────────────────
+
+
+@login_required
+def community_hub(request):
+    """Main community networking page."""
+    buddy_trips = TravelCompanion.objects.filter(is_active=True).select_related(
+        'user', 'user__profile'
+    )[:12]
+    chat_rooms = ChatRoom.objects.all()[:10]
+    groups = TravelGroup.objects.annotate(
+        members_count=Count('memberships')
+    ).order_by('-members_count')[:12]
+    events = CommunityEvent.objects.filter(is_active=True).select_related('organizer')[:8]
+    guides = GuideProfile.objects.filter(
+        is_verified=True, availability_status=True
+    ).select_related('user', 'user__profile')[:8]
+    map_markers = map_markers_from_posts(
+        Post.objects.filter(is_hidden_gem=True).select_related('author')[:50]
+    )
+    user_groups = TravelGroup.objects.filter(
+        memberships__user=request.user
+    ) if request.user.is_authenticated else TravelGroup.objects.none()
+
+    return render(request, 'community.html', {
+        'buddy_trips': buddy_trips,
+        'chat_rooms': chat_rooms,
+        'groups': groups,
+        'events': events,
+        'guides': guides,
+        'user_groups': user_groups,
+        'map_markers_json': json.dumps(map_markers),
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+def chat_room_view(request, slug):
+    room = get_object_or_404(ChatRoom, slug=slug)
+    if request.user not in room.members.all():
+        room.members.add(request.user)
+    room_messages = room.messages.select_related('user', 'user__profile').order_by('-created_at')[:100]
+    room_messages = list(reversed(room_messages))
+    return render(request, 'chat_room.html', {
+        'room': room,
+        'messages_list': room_messages,
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+@require_POST
+def send_chat_message(request, slug):
+    room = get_object_or_404(ChatRoom, slug=slug)
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    text = (data.get('text') or '').strip()
+    if not text:
+        return _json_error('Message cannot be empty.')
+    msg = ChatMessage.objects.create(room=room, user=request.user, text=text)
+    return JsonResponse({
+        'ok': True,
+        'message': {
+            'id': msg.id,
+            'text': msg.text,
+            'user': request.user.username,
+            'avatar': request.user.profile.get_avatar(),
+            'created': msg.created_at.strftime('%I:%M %p'),
+        },
+    })
+
+
+@login_required
+def group_detail(request, slug):
+    group = get_object_or_404(TravelGroup, slug=slug)
+    is_member = GroupMembership.objects.filter(group=group, user=request.user).exists()
+    members = group.memberships.select_related('user', 'user__profile')[:20]
+    posts = Post.objects.filter(category=group.category).select_related(
+        'author', 'author__profile'
+    ).prefetch_related('images')[:12]
+    return render(request, 'group_detail.html', {
+        'group': group,
+        'is_member': is_member,
+        'members': members,
+        'posts': posts,
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+@require_POST
+def toggle_group_membership(request, slug):
+    group = get_object_or_404(TravelGroup, slug=slug)
+    membership = GroupMembership.objects.filter(group=group, user=request.user).first()
+    if membership:
+        membership.delete()
+        joined = False
+    else:
+        GroupMembership.objects.create(group=group, user=request.user)
+        joined = True
+    return JsonResponse({'ok': True, 'joined': joined, 'count': group.member_count})
+
+
+@login_required
+def event_detail(request, slug):
+    event = get_object_or_404(CommunityEvent, slug=slug)
+    user_rsvp = EventRSVP.objects.filter(event=event, user=request.user).first()
+    attendees = event.rsvps.filter(status='going').select_related('user', 'user__profile')[:20]
+    return render(request, 'event_detail.html', {
+        'event': event,
+        'user_rsvp': user_rsvp,
+        'attendees': attendees,
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+@require_POST
+def toggle_event_rsvp(request, slug):
+    event = get_object_or_404(CommunityEvent, slug=slug)
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    status = data.get('status', 'going')
+    rsvp, created = EventRSVP.objects.get_or_create(
+        event=event, user=request.user, defaults={'status': status}
+    )
+    if not created:
+        if rsvp.status == status:
+            rsvp.delete()
+            return JsonResponse({'ok': True, 'rsvped': False, 'count': event.attendee_count})
+        rsvp.status = status
+        rsvp.save(update_fields=['status'])
+    return JsonResponse({'ok': True, 'rsvped': True, 'status': status, 'count': event.attendee_count})
+
+
+@login_required
+@require_POST
+def request_join_trip(request, trip_id):
+    trip = get_object_or_404(TravelCompanion, pk=trip_id, is_active=True)
+    if trip.user == request.user:
+        return _json_error('You cannot join your own trip.')
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    message_text = (data.get('message') or '').strip()
+    join_req, created = TripJoinRequest.objects.get_or_create(
+        trip=trip, user=request.user, defaults={'message': message_text}
+    )
+    if not created:
+        return _json_error('You have already requested to join this trip.')
+    _notify(trip.user, request.user, 'follow', f'{request.user.username} wants to join your trip to {trip.destination}')
+    return JsonResponse({'ok': True, 'requested': True})
