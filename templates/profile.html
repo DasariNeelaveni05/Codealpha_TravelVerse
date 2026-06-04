@@ -1,0 +1,155 @@
+{% extends 'app_base.html' %}
+{% load travelverse_tags %}
+{% block title %}@{{ profile_user.username }}'s Profile{% endblock %}
+
+{% block content %}
+<!-- Full-width Stunning Cover Photo Hero Section -->
+<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80'); height: 260px;">
+  <div class="hero-overlay"></div>
+  <div class="hero-content" style="padding-top: 4rem;">
+    <!-- Profile metadata could go here or floating below -->
+  </div>
+</section>
+
+<div class="app-shell-new" style="margin-top: -60px;">
+  <main class="main-content">
+    
+    <!-- Profile Information Card (Glassmorphic) -->
+    <section class="profile-header glass-card stagger-card" style="position: relative; z-index: 10; margin-bottom: 2rem; padding: 2rem; border-radius: 20px;">
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+        <div class="profile-avatar">
+          {% if profile_user.profile.avatar %}
+          <img src="{{ profile_user.profile.avatar.url }}" alt="{{ profile_user.username }}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: var(--shadow-lg);">
+          {% else %}
+          <div class="avatar-lg" style="width: 110px; height: 110px; border-radius: 50%; display: grid; place-items: center; font-size: 2.5rem; background: var(--primary-teal); color: #fff; border: 4px solid var(--surface); box-shadow: var(--shadow-lg);">
+            {{ profile_user.profile.badge_icon }}
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="profile-info" style="flex: 1;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+            <h1 style="font-size: 1.6rem; margin: 0;">@{{ profile_user.username }}</h1>
+            <span class="badge-pill" style="background: var(--accent-gradient); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.60rem; border-radius: 999px; text-transform: uppercase;">
+              {{ profile_user.profile.badge_full_name }}
+            </span>
+          </div>
+          
+          {% if profile_user.profile.location %}
+          <p class="bio" style="font-weight: 700; color: var(--primary-ocean); margin-bottom: 0.5rem;">📍 {{ profile_user.profile.location }}</p>
+          {% endif %}
+          <p class="bio" style="margin-bottom: 1.25rem; font-size: 0.95rem; color: var(--text-secondary);">
+            {{ profile_user.profile.bio|default:"No bio yet. Tap edit profile to introduce yourself!" }}
+          </p>
+
+          <!-- Explorer XP Progress Bar -->
+          <div class="explorer-xp-widget" style="padding: 0; background: none; border: none; box-shadow: none; margin-bottom: 1.25rem;">
+            <div class="explorer-progress-header" style="font-size: 0.85rem; font-weight: 700;">
+              <span>Explorer Score: <strong>{{ travel_stats.explorer_score }} XP</strong></span>
+              <span style="margin-left: auto; color: var(--primary-ocean);">Level {{ profile_user.profile.xp_level }}</span>
+            </div>
+            <div class="xp-bar-container" style="height: 10px;">
+              <div class="xp-bar-fill" style="width: {{ profile_user.profile.explorer_progress }}%;"></div>
+            </div>
+          </div>
+
+          <!-- Profile statistics counters -->
+          <div class="profile-stats" style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem;">
+            <span><strong style="color: var(--text);">{{ travel_stats.posts }}</strong> posts</span>
+            <a href="{% url 'followers' profile_user.username %}" style="color: var(--text-secondary);"><strong id="followers-count" style="color: var(--text);">{{ travel_stats.followers }}</strong> followers</a>
+            <a href="{% url 'following' profile_user.username %}" style="color: var(--text-secondary);"><strong style="color: var(--text);">{{ travel_stats.following }}</strong> following</a>
+            <span><strong style="color: var(--text);">{{ travel_stats.bucket_list }}</strong> saved</span>
+          </div>
+
+          <div class="profile-actions" style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+            {% if user == profile_user %}
+            <a href="{% url 'profile_edit' %}" class="btn btn-outline btn-sm">Edit Profile</a>
+            <a href="{% url 'passport' %}" class="btn btn-ghost btn-sm">🛂 Stamps Book</a>
+            <a href="{% url 'stats' %}" class="btn btn-ghost btn-sm">📊 Travel Stats</a>
+            {% else %}
+            <button type="button" class="btn btn-primary btn-sm btn-follow {% if is_following %}following{% endif %}" data-follow="{{ profile_user.username }}">
+              {% if is_following %}Following{% else %}Follow{% endif %}
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Geographic Stats Cards -->
+    <section class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 2rem;">
+      <div class="stat-card highlight glass-card stagger-card" style="animation-delay: 0.05s;">
+        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🌍 {{ travel_stats.countries }}</span>
+        <span>Countries visited</span>
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.1s;">
+        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🏙️ {{ travel_stats.cities }}</span>
+        <span>Cities visited</span>
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.15s;">
+        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">💎 {{ travel_stats.gems_discovered }}</span>
+        <span>Gems Shared</span>
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.2s;">
+        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🎬 {{ travel_stats.reels }}</span>
+        <span>Reels</span>
+      </div>
+    </section>
+
+    <!-- Achievements Badge Section -->
+    <section class="page-card glass-card stagger-card" style="margin-bottom: 2rem; animation-delay: 0.2s;">
+      <h3 style="margin-bottom: 1rem; color: var(--primary-ocean);">🏅 Explorer Achievements ({{ travel_stats.achievements_unlocked }}/{{ travel_stats.achievements_total }})</h3>
+      <div class="achievements-grid compact" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;">
+        {% for a in travel_stats.achievements %}
+        <div class="achievement-card {% if a.unlocked %}unlocked{% else %}locked{% endif %}" style="padding: 0.85rem; border-radius: 12px; text-align: center; border: 1px solid var(--border);">
+          <span style="font-size: 1.8rem; display: block; margin-bottom: 0.25rem;">{{ a.icon }}</span>
+          <strong style="font-size: 0.78rem; display: block; line-height: 1.2;">{{ a.title }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- 3-Column Instagram-Style Grid for Posts -->
+    <section class="page-card glass-card stagger-card" style="animation-delay: 0.3s;">
+      <h3 style="margin-bottom: 1rem; color: var(--primary-ocean);">📸 Shared Journeys Grid</h3>
+      <div class="profile-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+        {% for post in posts %}
+        <a href="{% url 'post_detail' post.pk %}" class="grid-item stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.05s); border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 1;">
+          {% with img=post.images.first %}
+          {% if img %}
+          <img src="{{ img.image.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--transition);">
+          {% else %}
+          <div style="width: 100%; height: 100%; background: var(--bg-soft); display: grid; place-items: center; font-size: 2rem;">🌅</div>
+          {% endif %}
+          {% endwith %}
+          <span class="grid-gem-score" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold;">
+            💎 {{ post.hidden_gem_score }}
+          </span>
+        </a>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--muted);">
+          <p style="font-size: 2.5rem;">📸</p>
+          <p style="font-weight: 700; margin-top: 0.5rem;">No posts shared yet</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+  </main>
+  
+  {% include 'partials/sidebar_right.html' %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Trigger anim for progress bar fill after short delay
+    setTimeout(() => {
+      const fills = document.querySelectorAll('.xp-bar-fill');
+      fills.forEach(fill => {
+        // Target width is set by server-side templates, let's ensure it has standard smooth transition
+        fill.style.transition = 'width 1.5s cubic-bezier(0.1, 1, 0.1, 1)';
+      });
+    }, 100);
+  });
+</script>
+{% endblock %}

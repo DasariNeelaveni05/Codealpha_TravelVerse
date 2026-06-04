@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}TravelVerse{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a class="logo" href="{% url 'social:home' %}">TravelVerse</a>
+            <nav class="nav-links">
+                {% if user.is_authenticated %}
+                <a href="{% url 'social:profile_detail' user.username %}">My Profile</a>
+                <a href="{% url 'social:post_create' %}">New Post</a>
+                <a href="{% url 'social:logout' %}">Logout</a>
+                {% else %}
+                <a href="{% url 'social:login' %}">Login</a>
+                <a href="{% url 'social:register' %}">Sign Up</a>
+                {% endif %}
+            </nav>
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <span class="menu-icon"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section (optional override) -->
+    {% block hero %}
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content container">
+            <h1>Explore Hidden Gems Around the World</h1>
+            <p>Share your journeys, discover new places, and become a top explorer.</p>
+            <a href="{% url 'social:register' %}" class="btn-primary">Get Started</a>
+        </div>
+    </section>
+    {% endblock %}
+
+    <!-- Main Content -->
+    <main class="main-content container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+{% include 'social/_footer.html' %}
+
+    <!-- Main JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

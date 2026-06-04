@@ -1,0 +1,21 @@
+{% with p=travel_stats.progress|default:profile_user.profile.explorer_progress %}
+<div class="explorer-progress-card">
+  <div class="explorer-progress-header">
+    <span class="explorer-badge-lg">{{ p.current_icon }} {{ p.current_label }}</span>
+    {% if not p.max_tier %}
+    <span class="muted">→ {{ p.next_icon }} {{ p.next_label }}</span>
+    {% else %}
+    <span class="muted">Max tier reached</span>
+    {% endif %}
+  </div>
+  <div class="progress-bar" role="progressbar" aria-valuenow="{{ p.progress_percent }}" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-fill" style="width: {{ p.progress_percent }}%"></div>
+  </div>
+  <div class="progress-meta">
+    <span><strong>{{ travel_stats.explorer_score|default:profile_user.profile.explorer_score }}</strong> XP</span>
+    {% if not p.max_tier %}
+    <span>{{ p.xp_needed }} XP to {{ p.next_label }}</span>
+    {% endif %}
+  </div>
+</div>
+{% endwith %}

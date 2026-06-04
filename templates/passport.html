@@ -1,0 +1,122 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}Digital Passport{% endblock %}
+
+{% block content %}
+<!-- Full-width Stunning Hero Section -->
+<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80');">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Your Digital Passport</h1>
+    <p>Track your global adventures, collect unique stamps for every location visited, and build your traveler legacy.</p>
+  </div>
+</section>
+
+<div class="app-shell-new">
+  <main class="main-content">
+    <div class="page-header-row">
+      <div>
+        <h2>🛂 Traveler Stamps & Milestones</h2>
+        <p class="subtitle">Your official explorer status and country statistics</p>
+      </div>
+    </div>
+
+    <!-- Stats and Milestones Section -->
+    <div class="milestones-row">
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.05s;">
+        <span>{{ travel_stats.countries }}</span>Countries
+      </div>
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.1s;">
+        <span>{{ travel_stats.states }}</span>States
+      </div>
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.15s;">
+        <span>{{ travel_stats.cities }}</span>Cities
+      </div>
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.2s;">
+        <span>{{ travel_stats.continents }}</span>Continents
+      </div>
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.25s;">
+        <span>{{ travel_stats.explorer_score }}</span>Explorer XP
+      </div>
+      <div class="milestone-chip glass-card stagger-card" style="animation-delay: 0.3s;">
+        <span>{{ travel_stats.achievements_unlocked }}</span>Achievements
+      </div>
+    </div>
+
+    <!-- Travel Statistics Cards Grid -->
+    <div class="passport-stats dashboard-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <div class="stat-card highlight glass-card stagger-card" style="animation-delay: 0.1s;">
+        <span class="stat-num">{{ travel_stats.posts }}</span>Posts Shared
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.15s;">
+        <span class="stat-num">{{ travel_stats.gems_discovered }}</span>Gems Shared
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.2s;">
+        <span class="stat-num">{{ travel_stats.followers }}</span>Followers
+      </div>
+      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.25s;">
+        <span class="stat-num">{{ travel_stats.bucket_list }}</span>Bucket List
+      </div>
+    </div>
+
+    <!-- Map View -->
+    <div class="page-card glass-card stagger-card" style="margin-bottom: 2.5rem; animation-delay: 0.2s;">
+      <h3 style="margin-bottom: 0.75rem;">🗺️ Global Footprint Map</h3>
+      {% include 'partials/world_map.html' %}
+    </div>
+
+    <!-- Interactive Stamps Book (Killer differentiator for demos) -->
+    <div class="page-card glass-card stagger-card" style="margin-bottom: 2.5rem; animation-delay: 0.3s;">
+      <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; color: var(--primary-ocean);">🛂 Passport Stamps Book</h3>
+      <div class="passport-stamp-grid">
+        {% for s in stamps %}
+        <div class="passport-stamp-physical stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.05s);" title="Click to view details">
+          <span class="passport-stamp-icon">
+            {% if s.continent == 'Asia' %}⛩️
+            {% elif s.continent == 'Europe' %}🏰
+            {% elif s.continent == 'Africa' %}🦁
+            {% elif s.continent == 'North America' %}🗽
+            {% elif s.continent == 'South America' %}🌴
+            {% elif s.continent == 'Oceania' %}🦘
+            {% else %}✈️{% endif %}
+          </span>
+          <div class="passport-stamp-country">{{ s.country|slice:":10" }}</div>
+          <div class="passport-stamp-date">{{ s.visited_at|date:"M Y" }}</div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--muted);">
+          <p>No physical stamps gathered yet. Share a post indicating your travel country!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Timeline Journey -->
+    <div class="page-card glass-card stagger-card" style="animation-delay: 0.35s;">
+      <h3 style="margin-bottom: 1rem; color: var(--primary-ocean);">Explorer Journey Timeline</h3>
+      <ul class="timeline passport-timeline" style="list-style: none; padding-left: 1.5rem; border-left: 2px solid var(--primary-teal);">
+        {% for s in timeline %}
+        <li style="margin-bottom: 1.5rem; position: relative;">
+          <span style="position: absolute; left: -2.05rem; top: 0.2rem; background: var(--bg); border: 2px solid var(--primary-teal); border-radius: 50%; width: 14px; height: 14px; display: inline-block;"></span>
+          <div>
+            <strong style="font-size: 1.05rem; color: var(--text);">{{ s.stamp_label|default:s.country }}</strong>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.2rem 0;">
+              {% if s.city %}{{ s.city }}{% endif %}{% if s.state %}, {{ s.state }}{% endif %} — {{ s.country }}
+              {% if s.continent %} · <span style="font-weight: 700; color: var(--primary-teal);">{{ s.continent }}</span>{% endif %}
+            </div>
+            <div style="font-size: 0.78rem; color: var(--muted);">
+              Visited on {{ s.visited_at|date:"F d, Y" }}
+              {% if s.post %} · <a href="{% url 'post_detail' s.post.pk %}" style="font-weight: bold; color: var(--primary-ocean);">View Trip Post →</a>{% endif %}
+            </div>
+          </div>
+        </li>
+        {% empty %}
+        <li style="color: var(--muted);">Timeline is empty. Share posts with country info.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </main>
+  
+  {% include 'partials/sidebar_right.html' %}
+</div>
+{% endblock %}

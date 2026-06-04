@@ -1,0 +1,10 @@
+{% load travelverse_tags %}
+<div class="gem-score-badge" title="Hidden Gem Score based on likes, saves, votes & engagement">
+  <span class="gem-score-ring" style="--score: {{ post.hidden_gem_score }}">
+    <span class="gem-score-value">{{ post.hidden_gem_score }}</span>
+  </span>
+  <span class="gem-score-label">
+    💎 {{ post.hidden_gem_score|gem_score_label }}
+    {% if post|certified_gem %}<span class="certified-tag">✓ Certified</span>{% endif %}
+  </span>
+</div>

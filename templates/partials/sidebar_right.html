@@ -1,0 +1,108 @@
+<aside class="sidebar sidebar-right">
+  <div class="widget">
+    <h3>🔥 Trending Hidden Gems</h3>
+    <ul class="widget-list">
+      {% for post in trending %}
+      <li>
+        <a href="{% url 'post_detail' post.pk %}">
+          <strong>{{ post.location }}</strong>
+          <span>Score {{ post.hidden_gem_score }} · {{ post.gem_votes }} votes</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="muted">No gems yet — be the first explorer!</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>🌟 Featured Destinations</h3>
+    <ul class="widget-list">
+      {% for post in featured_destinations %}
+      <li>
+        <a href="{% url 'post_detail' post.pk %}">
+          <strong>📍 {{ post.location }}</strong>
+          <span>Gem score {{ post.hidden_gem_score }}</span>
+        </a>
+      </li>
+      {% empty %}
+      {% for post in trending|slice:":3" %}
+      <li><a href="{% url 'post_detail' post.pk %}">{{ post.location }}</a></li>
+      {% endfor %}
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>🏆 Top Explorers</h3>
+    <ul class="widget-list explorers">
+      {% for profile in top_explorers %}
+      <li>
+        <a href="{% url 'profile' profile.user.username %}">
+          <span class="avatar-sm">{% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ profile.badge_icon }}{% endif %}</span>
+          <div>
+            <strong>@{{ profile.user.username }}</strong>
+            <span class="badge-pill badge-{{ profile.badge_slug|default:profile.badge|lower }}">{{ profile.badge_full_name|default:profile.badge }}</span>
+            <small>{{ profile.explorer_score }} XP</small>
+          </div>
+        </a>
+      </li>
+      {% empty %}
+      <li class="muted">Explore to climb the ranks!</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>✈️ Recommended Trips</h3>
+    <ul class="widget-list">
+      {% for trip in recommended_trips %}
+      <li>
+        <strong>{{ trip.icon }} {{ trip.title }}</strong>
+        <span>{{ trip.location }} · {{ trip.budget }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>✨ Suggested Travelers</h3>
+    <ul class="widget-list">
+      {% for u in suggested_users %}
+      <li class="suggest-row">
+        <a href="{% url 'profile' u.username %}">@{{ u.username }}</a>
+        <button type="button" class="btn btn-sm btn-follow" data-follow="{{ u.username }}">Follow</button>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>🎯 Travel Challenges</h3>
+    <ul class="widget-list">
+      {% for ch in travel_challenges %}
+      <li class="challenge-item">
+        <strong>{{ ch.icon }} {{ ch.title }}</strong>
+        <small>{{ ch.desc }}</small>
+        <div class="challenge-bar"><div class="challenge-bar-fill" style="width:{{ ch.progress }}%"></div></div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="widget">
+    <h3>📣 Community Highlights</h3>
+    <ul class="widget-list">
+      {% for post in community_highlights %}
+      <li>
+        <a href="{% url 'post_detail' post.pk %}">
+          <strong>@{{ post.author.username }}</strong>
+          <span>{{ post.location|truncatewords:4 }}</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="muted">Share a post to appear here!</li>
+      {% endfor %}
+    </ul>
+  </div>
+</aside>

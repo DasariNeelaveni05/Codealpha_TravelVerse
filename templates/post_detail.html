@@ -1,0 +1,22 @@
+{% extends 'app_base.html' %}
+{% block title %}{{ post.location }}{% endblock %}
+{% block main %}
+<div data-share-url="{% url 'post_detail' post.pk %}">
+{% include 'partials/feed_post.html' %}
+</div>
+<section class="comments-section">
+  <h2>Comments</h2>
+  <ul class="comment-list" id="comments-{{ post.id }}">
+    {% for c in comments %}
+    <li>
+      <strong>@{{ c.user.username }}</strong> {{ c.text }}
+      <ul class="replies">
+        {% for r in c.replies.all %}
+        <li><strong>@{{ r.user.username }}</strong> {{ r.text }}</li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

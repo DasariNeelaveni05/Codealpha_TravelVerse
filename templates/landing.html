@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}TravelVerse — Discover Hidden Gems{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+
+{% block content %}
+<section class="landing-hero">
+  <div class="hero-bg" data-hero-slides='[
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80"
+  ]'></div>
+  <div class="hero-particles">
+    <span style="--x:12%; --y:30%; --d:10s;"></span>
+    <span style="--x:22%; --y:76%; --d:14s;"></span>
+    <span style="--x:34%; --y:18%; --d:12s;"></span>
+    <span style="--x:48%; --y:52%; --d:17s;"></span>
+    <span style="--x:64%; --y:28%; --d:13s;"></span>
+    <span style="--x:78%; --y:66%; --d:18s;"></span>
+    <span style="--x:86%; --y:12%; --d:11s;"></span>
+    <span style="--x:7%; --y:58%; --d:15s;"></span>
+    <span style="--x:52%; --y:84%; --d:16s;"></span>
+  </div>
+
+  <div class="hero-content">
+    <span class="hero-badge">✨ Travel storytelling for hidden gem hunters</span>
+    <h1>Open the next chapter of your adventure.</h1>
+    <div class="hero-line">
+      <span class="hero-typed"></span>
+      <span class="cursor"></span>
+    </div>
+    <p>Share hidden destinations, connect with local guides, build your passport, and feel the wanderlust before you even leave.</p>
+
+    <div class="hero-actions">
+      <a href="{% url 'register' %}" class="btn btn-primary btn-hero">Start Exploring →</a>
+      <a href="{% url 'feed' %}" class="btn btn-outline btn-hero">Explore the Feed</a>
+    </div>
+
+    <div class="hero-stat-grid">
+      <div class="hero-stat"><strong>320+</strong><span>Hidden gems shared</span></div>
+      <div class="hero-stat"><strong>1.8K</strong><span>Explorer stories</span></div>
+      <div class="hero-stat"><strong>24</strong><span>World regions covered</span></div>
+    </div>
+
+    <div class="hero-marquee" role="region" aria-label="Live from the community">
+      <div class="marquee-track">
+        {% for post in highlights %}
+        <article class="marquee-card" data-share-url="{% url 'post_detail' post.pk %}">
+          {% with img=post.images.first %}
+          {% if img %}
+            <img src="{{ img.image.url }}" alt="{{ post.location }}">
+          {% else %}
+            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="Community post">
+          {% endif %}
+          {% endwith %}
+          <div class="meta">
+            <strong>{{ post.location }}</strong>
+            <small>by @{{ post.author.username }}</small>
+          </div>
+        </article>
+        {% endfor %}
+        {% for post in highlights %}
+        <article class="marquee-card" aria-hidden="true">
+          {% with img=post.images.first %}
+          {% if img %}<img src="{{ img.image.url }}" alt="">{% else %}<img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="">{% endif %}
+          {% endwith %}
+          <div class="meta"><strong>{{ post.location }}</strong><small>by @{{ post.author.username }}</small></div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-preview-grid">
+    {% for post in trending %}
+    <a href="{% url 'post_detail' post.pk %}" class="hero-card">
+      {% with img=post.images.first %}
+      {% if img %}
+        <img src="{{ img.image.url }}" alt="{{ post.location }}">
+      {% else %}
+        <div class="ph">🌅</div>
+      {% endif %}
+      {% endwith %}
+      <span>📍 {{ post.location }}</span>
+    </a>
+    {% empty %}
+    <div class="hero-card ph-card">💎 Discover hidden gems worldwide</div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Why TravelVerse?</span>
+    <h2 class="section-title">A travel documentary for every explorer.</h2>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Hidden Gem Discovery</h3>
+      <p>Find off-grid destinations, boutique hideaways, and user-voted secret spots across the world.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Passport & Badges</h3>
+      <p>Collect passport stamps, unlock explorer badges, and watch your travel story come alive.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Reels & Stories</h3>
+      <p>Share vertical travel moments, see immersive reels, and feel each destination like a mini film.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Local Guide Connect</h3>
+      <p>Discover local experts, message guides directly, and plan a first-time travel experience with confidence.</p>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Trending Destinations</span>
+    <h2 class="section-title">Most loved hidden gems from the community.</h2>
+  </div>
+  <div class="destination-grid">
+    {% for post in trending %}
+    <article class="destination-card">
+      {% with img=post.images.first %}
+      {% if img %}
+      <img src="{{ img.image.url }}" alt="{{ post.location }}">
+      {% else %}
+      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="{{ post.location }}">
+      {% endif %}
+      {% endwith %}
+      <div class="destination-copy">
+        <h3>{{ post.location }}</h3>
+        <p>{{ post.hidden_gem_description|default:'A secret escape waiting to be discovered.'|truncatechars:100 }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Explorer Leaderboard</span>
+    <h2 class="section-title">Meet the community's top adventurers.</h2>
+  </div>
+  <div class="leaderboard-grid">
+    {% for p in top_explorers %}
+    <article class="leaderboard-card">
+      <div>
+        <small>Explorer</small>
+        <h3>@{{ p.user.username }}</h3>
+        <p>{{ p.explorer_score }} points</p>
+      </div>
+      <div class="leader-rank">{{ forloop.counter }}</div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Travel Categories</span>
+    <h2 class="section-title">Discover new ways to explore.</h2>
+  </div>
+  <div class="category-grid">
+    <a href="{% url 'search' %}?category=beach" class="category-card"><span>🏖️</span><h3>Beaches</h3><small>Sunset coastlines and island escapes</small></a>
+    <a href="{% url 'search' %}?category=mountain" class="category-card"><span>🏔️</span><h3>Mountains</h3><small>High trails and alpine hideaways</small></a>
+    <a href="{% url 'search' %}?category=adventure" class="category-card"><span>🧗</span><h3>Adventure</h3><small>Thrilling treks and epic journeys</small></a>
+    <a href="{% url 'search' %}?category=food" class="category-card"><span>🍜</span><h3>Food</h3><small>Local flavors and tasting trails</small></a>
+    <a href="{% url 'search' %}?category=cultural" class="category-card"><span>🏛️</span><h3>Culture</h3><small>Heritage sites and hidden rituals</small></a>
+    <a href="{% url 'search' %}?category=island" class="category-card"><span>🌴</span><h3>Islands</h3><small>Turquoise lagoons and secret beaches</small></a>
+  </div>
+</section>
+{% endblock %}

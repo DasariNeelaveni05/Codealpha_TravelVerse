@@ -1,0 +1,20 @@
+{% extends 'app_base.html' %}
+{% block title %}Travelogues{% endblock %}
+{% block main %}
+<div class="page-header-row">
+  <h1>📖 Travelogues</h1>
+  <a href="{% url 'create_blog' %}" class="btn btn-primary">Write Travelogue</a>
+</div>
+<div class="blog-grid">
+  {% for blog in blogs %}
+  <article class="blog-card">
+    {% if blog.cover_image %}<img src="{{ blog.cover_image.url }}" alt="">{% endif %}
+    <h2><a href="{% url 'blog_detail' blog.slug %}">{{ blog.title }}</a></h2>
+    <p>by @{{ blog.author.username }} · {{ blog.created_at|date:"M d, Y" }}</p>
+    {% if blog.location %}<span>📍 {{ blog.location }}</span>{% endif %}
+  </article>
+  {% empty %}
+  {% include 'partials/empty_state_card.html' with icon="📖" title="No travelogues yet" message="Write your first story — tips, itineraries, and hidden gem discoveries." cta_url="/blog/create/" cta_label="Write travelogue" image_url="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80" %}
+  {% endfor %}
+</div>
+{% endblock %}

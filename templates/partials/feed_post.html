@@ -1,0 +1,93 @@
+{% load travelverse_tags %}
+<article class="feed-card glass-card" data-post-id="{{ post.id }}" data-share-url="{% url 'post_detail' post.pk %}">
+  <header class="card-header">
+    <a href="{% url 'profile' post.author.username %}" class="author">
+      <span class="avatar-sm">
+        {% if post.author.profile.avatar %}
+        <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}">
+        {% else %}{{ post.author.profile.badge_icon }}{% endif %}
+      </span>
+      <div>
+        <strong>@{{ post.author.username }}</strong>
+        <span class="badge-pill badge-{{ post.author.profile.badge_slug }}">{{ post.author.profile.badge_full_name }}</span>
+        <span class="location-pin">📍 {{ post.location }}{% if post.country %}, {{ post.country }}{% endif %}</span>
+      </div>
+    </a>
+    <div class="header-badges">
+      {% include 'partials/gem_score_badge.html' %}
+      {% if post.is_hidden_gem %}<span class="gem-tag">💎 Hidden Gem</span>{% endif %}
+    </div>
+  </header>
+
+  <div class="card-media card-media-large" data-double-tap-like="{{ post.id }}">
+    {% if post.images.all %}
+    <div class="carousel" data-carousel>
+      {% for img in post.images.all %}
+      <img src="{{ img.image.url }}" alt="{{ post.location }}" loading="lazy">
+      {% endfor %}
+    </div>
+    {% else %}
+    <img src="{% post_image_url post %}" alt="{{ post.location }}" loading="lazy" class="placeholder-hero-img">
+    {% endif %}
+    <div class="heart-burst" aria-hidden="true">❤️</div>
+    {% if post.budget or post.budget_amount %}<span class="budget-floating">💰 {{ post.budget|default:post.budget_amount }}</span>{% endif %}
+  </div>
+
+  <div class="card-actions">
+    <button type="button" class="action-btn like-btn {% if post.user_liked %}liked{% endif %}" data-like="{{ post.id }}" aria-label="Like">
+      <span class="icon-heart">{% if post.user_liked %}❤️{% else %}🤍{% endif %}</span>
+    </button>
+    <a href="{% url 'post_detail' post.pk %}" class="action-btn" aria-label="Comment">💬</a>
+    <button type="button" class="action-btn {% if post.user_saved %}active{% endif %}" data-save="{{ post.id }}" aria-label="Save">🔖</button>
+    <button type="button" class="action-btn" data-bucket="{{ post.id }}" aria-label="Bucket list">🪣</button>
+    <button type="button" class="action-btn" data-share="{{ post.id }}" aria-label="Share">↗️</button>
+    {% if user.is_authenticated and user != post.author %}
+    <button type="button" class="btn btn-sm btn-follow {% if post.author_is_followed %}following{% endif %}" data-follow="{{ post.author.username }}">
+      {% if post.author_is_followed %}Following{% else %}Follow{% endif %}
+    </button>
+    {% endif %}
+    {% if post.is_hidden_gem %}
+    <button type="button" class="action-btn" data-gem-vote="{{ post.id }}" aria-label="Vote">⬆️ <span data-votes="{{ post.id }}">{{ post.gem_votes }}</span></button>
+    {% endif %}
+  </div>
+
+  <div class="card-stats">
+    <span data-like-count="{{ post.id }}">{{ post.like_count }} likes</span>
+    <span data-comment-count="{{ post.id }}">{{ post.comment_count }} comments</span>
+    <span data-gem-score="{{ post.id }}">Gem {{ post.hidden_gem_score }}/100</span>
+    <span>{{ post.save_count }} saves</span>
+  </div>
+
+  {% if post.caption %}
+  <p class="card-caption"><strong>@{{ post.author.username }}</strong> {{ post.caption }}</p>
+  {% endif %}
+
+  {% if post.hidden_gem_description %}
+  <div class="gem-description">💎 {{ post.hidden_gem_description }}</div>
+  {% endif %}
+
+  <div class="travel-meta">
+    {% if post.budget %}<span class="meta-chip budget">💰 {{ post.budget }}</span>{% endif %}
+    {% if post.best_season %}<span class="meta-chip">🌤️ {{ post.best_season }}</span>{% endif %}
+    <span class="meta-chip">🛡️ {{ post.safety_rating }}/5</span>
+    <span class="meta-chip">👥 {{ post.get_crowd_level_display }}</span>
+    <span class="meta-chip">⛰️ {{ post.get_difficulty_display }}</span>
+    <span class="meta-chip">🏷️ {{ post.get_category_display }}</span>
+  </div>
+
+  {% if post.itinerary or post.travel_tips %}
+  <details class="travel-details">
+    <summary>Itinerary & travel tips</summary>
+    {% if post.itinerary %}<p><strong>Itinerary:</strong> {{ post.itinerary|linebreaksbr }}</p>{% endif %}
+    {% if post.travel_tips %}<p><strong>Tips:</strong> {{ post.travel_tips|linebreaksbr }}</p>{% endif %}
+  </details>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+  <form class="inline-comment" data-comment-form="{{ post.id }}">
+    {% csrf_token %}
+    <input type="text" name="text" class="form-control" placeholder="Add a comment..." maxlength="1000" required>
+    <button type="submit" class="btn btn-sm btn-primary">Post</button>
+  </form>
+  {% endif %}
+</article>

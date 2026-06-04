@@ -1,0 +1,16 @@
+{% extends 'app_base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block main %}
+<h1>🔔 Notifications</h1>
+<ul class="notif-list">
+  {% for n in notifications %}
+  <li class="{% if not n.is_read %}unread{% endif %}">
+    <strong>@{{ n.actor.username }}</strong> {{ n.message }}
+    {% if n.post %}<a href="{% url 'post_detail' n.post.pk %}">View post</a>{% endif %}
+    <small>{{ n.created_at|timesince }} ago</small>
+  </li>
+  {% empty %}
+  <li>{% include 'partials/empty_state_card.html' with icon="🔔" title="All caught up" message="Likes, follows, and comments will appear here when your community engages." image_url="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&q=80" %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

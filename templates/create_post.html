@@ -1,0 +1,51 @@
+{% extends 'app_base.html' %}
+{% block title %}New Post{% endblock %}
+{% block main %}
+<div class="page-card glass-card">
+  <h1>📸 Share a Hidden Gem</h1>
+  <p class="subtitle">Upload photos, tag the location, and help explorers discover your secret spot.</p>
+  <form method="post" enctype="multipart/form-data" class="form-grid" id="create-post-form">
+    {% csrf_token %}
+    <div class="form-full">
+      <label>Photos <span class="muted">(multiple allowed)</span></label>
+      <input type="file" name="images" class="form-control" accept="image/*" multiple>
+    </div>
+    <div class="form-full">
+      <label>Video <span class="muted">(optional)</span></label>
+      <input type="file" name="video" class="form-control" accept="video/mp4,video/webm">
+    </div>
+    <p class="form-section-title">Location & story</p>
+    {% for field in form %}
+    {% if field.name == 'budget_slider' %}
+    <div class="form-full budget-slider-wrap glass-card" style="padding:1rem">
+      <label for="id_budget_slider">{{ field.label }}</label>
+      <div class="budget-slider-row">
+        {{ field }}
+        <output id="budget-output" class="budget-output">$0</output>
+      </div>
+      <p class="form-hint">Drag to set your trip budget in USD</p>
+    </div>
+    {% elif field.name != 'budget_slider' %}
+    <div class="{% if field.field.widget.input_type == 'textarea' or field.field.widget.input_type == 'checkbox' or field.name == 'location' or field.name == 'caption' %}form-full{% endif %}">
+      <label>{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Publish Post</button>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  const slider = document.getElementById('id_budget_slider');
+  const out = document.getElementById('budget-output');
+  if (!slider || !out) return;
+  const fmt = (v) => '$' + Number(v).toLocaleString();
+  out.textContent = fmt(slider.value || 0);
+  slider.addEventListener('input', () => { out.textContent = fmt(slider.value); });
+})();
+</script>
+{% endblock %}

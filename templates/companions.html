@@ -1,0 +1,52 @@
+{% extends 'app_base.html' %}
+{% block title %}Travel Buddies{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+{% endblock %}
+{% block main %}
+<div class="page-header-row">
+  <div>
+    <h1>🤝 Find a Travel Companion</h1>
+    <p class="subtitle">Match with explorers heading to the same destination & dates</p>
+  </div>
+</div>
+
+<form method="get" class="search-bar large glass-card" style="padding:1rem;margin-bottom:1rem">
+  <input type="search" name="destination" class="form-control" value="{{ filter_destination }}" placeholder="Filter by destination or country...">
+  <input type="date" name="from" class="form-control" style="max-width:180px">
+  <button type="submit" class="btn btn-primary">Find matches</button>
+</form>
+
+<div class="planner-form glass-card">
+  <h2>Post a trip — looking for partners</h2>
+  <form method="post" class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="{% if field.field.widget.input_type == 'textarea' %}form-full{% endif %}">
+      <label>{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Publish listing</button>
+  </form>
+</div>
+
+<div class="companions-grid">
+  {% for trip in trips %}
+  <article class="companion-card glass-card">
+    <div class="companion-card-img" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80')"></div>
+    <div class="companion-card-body">
+      <h3>📍 {{ trip.destination }}{% if trip.country %}, {{ trip.country }}{% endif %}</h3>
+      <p class="meta">@{{ trip.user.username }} · {{ trip.user.profile.badge_full_name }}</p>
+      {% if trip.start_date %}<span class="meta-chip">📅 {{ trip.start_date }}{% if trip.end_date %} – {{ trip.end_date }}{% endif %}</span>{% endif %}
+      {% if trip.budget_range %}<span class="meta-chip">💰 {{ trip.budget_range }}</span>{% endif %}
+      <p>{{ trip.description|truncatewords:30 }}</p>
+      <a href="{% url 'profile' trip.user.username %}" class="btn btn-sm btn-outline">View profile</a>
+    </div>
+  </article>
+  {% empty %}
+  {% include 'partials/empty_state_card.html' with icon="🤝" title="No travel buddies yet" message="Be the first to post a trip and find fellow explorers." cta_url="" cta_label="" image_url="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80" %}
+  {% endfor %}
+</div>
+{% endblock %}

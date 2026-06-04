@@ -1,0 +1,33 @@
+{% extends 'app_base.html' %}
+{% block title %}{{ blog.title }}{% endblock %}
+{% block main %}
+<article class="blog-article page-card">
+  {% if blog.cover_image %}<img class="blog-cover" src="{{ blog.cover_image.url }}" alt="">{% endif %}
+  <h1>{{ blog.title }}</h1>
+  <p class="meta">
+    <a href="{% url 'profile' blog.author.username %}">@{{ blog.author.username }}</a>
+    · {{ blog.created_at|date:"F j, Y" }}
+    {% if blog.location %}· 📍 {{ blog.location }}{% endif %}
+    {% if blog.budget %}· 💰 {{ blog.budget }}{% endif %}
+  </p>
+  {% if blog.itinerary %}
+  <section class="blog-section">
+    <h2>📋 Itinerary</h2>
+    <div>{{ blog.itinerary|linebreaks }}</div>
+  </section>
+  {% endif %}
+  <div class="blog-content">{{ blog.content|linebreaks }}</div>
+  {% if blog.recommendations %}
+  <section class="blog-section">
+    <h2>💡 Recommendations</h2>
+    <div>{{ blog.recommendations|linebreaks }}</div>
+  </section>
+  {% endif %}
+</article>
+<h2 class="section-title">Comments</h2>
+<ul class="comment-list">
+  {% for c in comments %}
+  <li><strong>@{{ c.user.username }}</strong> {{ c.text }}</li>
+  {% empty %}<li class="muted">No comments yet.</li>{% endfor %}
+</ul>
+{% endblock %}

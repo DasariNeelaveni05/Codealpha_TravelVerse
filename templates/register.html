@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Register | TravelVerse{% endblock %}
+{% block body_class %}auth-layout{% endblock %}
+
+{% block content %}
+<div class="auth-premium-bg" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80');">
+  <div class="auth-premium-overlay"></div>
+  
+  <div class="auth-card-glass stagger-card" style="max-width: 500px;">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <span class="hero-badge" style="font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 999px; background: rgba(43, 108, 176, 0.15); color: var(--primary-ocean); font-weight: bold;">🌍 Join TravelVerse</span>
+      <h1 style="font-size: 1.75rem; margin-top: 0.75rem; margin-bottom: 0.35rem;">Create Explorer Account</h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Join fellow travel enthusiasts to discover hidden gems and pin passport stamps.</p>
+    </div>
+
+    <!-- Google Sign Up Button (Placeholder styled beautifully) -->
+    <button type="button" class="google-auth-btn" onclick="alert('Google Sign-Up integration clicked!')">
+      <svg viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+        <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.75H24v9h12.75c-.53 2.87-2.14 5.3-4.57 6.92l7.1 5.51C43.43 36.6 46.5 30.94 46.5 24z"></path>
+        <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.98-6.19z"></path>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.1-5.51c-2.2 1.48-5.01 2.32-8.79 2.32-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+      </svg>
+      <span>Sign up with Google</span>
+    </button>
+
+    <div class="divider-text">or register with email</div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      
+      {% if form.non_field_errors %}
+      <div class="form-errors" style="color: var(--danger); font-size: 0.85rem; background: rgba(229, 62, 62, 0.1); border: 1px solid rgba(229, 62, 62, 0.2); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
+        {{ form.non_field_errors.0 }}
+      </div>
+      {% endif %}
+
+      <div class="password-rules" style="background: rgba(56, 178, 172, 0.1); border: 1px solid rgba(56, 178, 172, 0.25); color: var(--primary-ocean); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.8rem; list-style: none; margin-bottom: 1.25rem;">
+        <li style="margin-bottom: 0.25rem;">✓ Passwords must match</li>
+        <li style="margin-bottom: 0.25rem;">✓ At least 8 characters in length</li>
+        <li>✓ Must contain numbers/symbols for strength</li>
+      </div>
+
+      {% for field in form %}
+      <div style="margin-bottom: 1.25rem;">
+        <label for="{{ field.id_for_label }}" style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--text-secondary);">{{ field.label }}</label>
+        
+        {% if "password" in field.name %}
+        <div class="password-input-wrapper">
+          <input type="password" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control" required style="border-radius: 8px; border: 1px solid var(--border); padding: 0.7rem 1rem; font-family: inherit; width: 100%;">
+          <span class="password-toggle-icon" onclick="togglePasswordVisibility('{{ field.id_for_label }}')">👁️</span>
+        </div>
+        {% else %}
+          {{ field }}
+        {% endif %}
+
+        {% if field.help_text %}
+          <span class="form-hint" style="display: block; font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem;">{{ field.help_text|safe }}</span>
+        {% endif %}
+        
+        {% if field.errors %}
+          <span class="field-error" style="display: block; color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;">{{ field.errors.0 }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; width: 100%; border-radius: 999px;">Create Account</button>
+    </form>
+    
+    <p class="auth-switch" style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--muted);">
+      Already exploring? <a href="{% url 'login' %}" style="font-weight: 700; color: var(--primary-ocean); text-decoration: none;">Log in</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const toggleIcon = field.nextElementSibling;
+    if (field.type === 'password') {
+      field.type = 'text';
+      toggleIcon.textContent = '🙈';
+    } else {
+      field.type = 'password';
+      toggleIcon.textContent = '👁️';
+    }
+  }
+</script>
+{% endblock %}

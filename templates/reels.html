@@ -1,0 +1,88 @@
+{% extends 'app_base.html' %}
+{% block title %}Travel Reels{% endblock %}
+
+{% block content %}
+<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80');">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Travel Reels</h1>
+    <p>Swipe up through immersive short journeys, save your favorites, and feel the sunrise from every continent.</p>
+    <a href="{% url 'create_reel' %}" class="btn btn-primary">+ Upload Your Reel</a>
+  </div>
+</section>
+
+<div class="app-shell-new">
+  <main class="main-content">
+    <div class="page-header-row">
+      <div>
+        <h2>🎬 Vertical Travel Stories</h2>
+        <p class="subtitle">Scroll or swipe to snap to the next reel. Tap the heart to react instantly.</p>
+      </div>
+    </div>
+
+    <div class="reels-vertical-container" data-reel-feed>
+      {% for reel in reels %}
+      <article class="reel-fullscreen-card" data-reel-card="{{ reel.id }}" data-guide-available="{% if reel.id in guide_reel_ids %}true{% else %}false{% endif %}">
+        <div class="reel-media">
+          <video src="{{ reel.video.url }}" muted playsinline preload="metadata" poster="{% if reel.thumbnail %}{{ reel.thumbnail.url }}{% else %}https://images.unsplash.com/photo-1519817650390-64a93db511aa?auto=format&fit=crop&w=1200&q=80{% endif %}"></video>
+          <div class="reel-progress-bar"><div class="reel-progress-fill"></div></div>
+          <button class="reel-mute-toggle" type="button" aria-label="Toggle mute">🔇</button>
+          {% if reel.id in guide_reel_ids %}
+          <span class="reel-guide-badge">Guide Available</span>
+          {% endif %}
+        </div>
+
+        <div class="reel-overlay">
+          <div class="reel-meta">
+            <a href="{% url 'profile' reel.author.username %}" class="reel-author">
+              <span class="avatar-sm">
+                {% if reel.author.profile.avatar %}
+                  <img src="{{ reel.author.profile.avatar.url }}" alt="{{ reel.author.username }}">
+                {% else %}
+                  <span>👤</span>
+                {% endif %}
+              </span>
+              <div>
+                <strong>@{{ reel.author.username }}</strong>
+                <small>{{ reel.location|default:'Unknown location' }}</small>
+              </div>
+            </a>
+            <div class="reel-actions-column">
+              <button type="button" class="reel-action-circle" data-like-reel="{{ reel.id }}" aria-label="Like reel">❤️</button>
+              <button type="button" class="reel-action-circle" data-share="{{ request.build_absolute_uri }}" aria-label="Share reel">↗️</button>
+              <button type="button" class="reel-action-circle" aria-label="Download reel">⬇️</button>
+            </div>
+          </div>
+
+          <div class="reel-info-bottom">
+            {% if reel.caption %}
+            <div class="reel-caption">{{ reel.caption }}</div>
+            {% endif %}
+            <div class="reel-tags">
+              <span>#travel</span>
+              <span>#explore</span>
+              <span>#{{ reel.location|slugify }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <article class="reel-fullscreen-card">
+        <div class="reel-media">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80" alt="No reels yet">
+        </div>
+        <div class="reel-overlay">
+          <div class="reel-info-bottom">
+            <h3>No reels yet</h3>
+            <p>Upload your first travel story to reach the community.</p>
+            <a href="{% url 'create_reel' %}" class="btn btn-primary">Upload Reel</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </main>
+
+  {% include 'partials/sidebar_right.html' %}
+</div>
+{% endblock %}

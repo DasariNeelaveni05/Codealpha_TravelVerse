@@ -1,0 +1,18 @@
+{% extends 'app_base.html' %}
+{% block title %}Upload Reel{% endblock %}
+{% block main %}
+<div class="page-card">
+  <h1>🎬 Upload Travel Reel</h1>
+  <form method="post" enctype="multipart/form-data" class="form-grid">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-full">
+      <label>{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Upload</button>
+  </form>
+</div>
+{% endblock %}

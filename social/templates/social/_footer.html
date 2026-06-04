@@ -1,0 +1,36 @@
+{% comment %} Footer component for TravelVerse {% endcomment %}
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div class="footer-brand">
+            <h2>TravelVerse</h2>
+            <p>Every journey tells a story.</p>
+        </div>
+        <div class="footer-links">
+            <h3>Explore</h3>
+            <ul>
+                <li><a href="#">Hidden Gems</a></li>
+                <li><a href="#">Travel Challenges</a></li>
+                <li><a href="#">Top Explorers</a></li>
+            </ul>
+        </div>
+        <div class="footer-links">
+            <h3>Company</h3>
+            <ul>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+            </ul>
+        </div>
+        <div class="footer-subscribe">
+            <h3>Stay Updated</h3>
+            <form action="#" method="post">
+                <input type="email" placeholder="Your email" required />
+                <button type="submit" class="btn-primary">Subscribe</button>
+            </form>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; {{ now|date:"Y" }} TravelVerse. All rights reserved.</p>
+    </div>
+</footer>

@@ -1,0 +1,65 @@
+{% extends 'app_base.html' %}
+{% block title %}Travel Statistics{% endblock %}
+{% block main %}
+<h1>📊 Travel Statistics Dashboard</h1>
+<p class="subtitle">Your explorer journey at a glance</p>
+
+{% include 'partials/explorer_progress.html' with travel_stats=travel_stats profile_user=user %}
+
+<div class="stats-grid dashboard-grid">
+  <div class="stat-card highlight glass-card"><span class="stat-num">{{ travel_stats.posts }}</span>Posts Created</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.countries }}</span>Countries Visited</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.gems_discovered }}</span>Hidden Gems Shared</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.bucket_list }}</span>Planned Trips</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.followers }}</span>Followers</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.following }}</span>Following</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.explorer_score }}</span>Explorer Score (XP)</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.engagement_rate }}%</span>Engagement Rate</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.states }}</span>States Visited</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.cities }}</span>Cities Visited</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.continents }}</span>Continents Explored</div>
+  <div class="stat-card glass-card"><span class="stat-num">{{ travel_stats.saved_posts }}</span>Saved Posts</div>
+</div>
+
+<h2 class="section-title">🏅 Travel Achievements ({{ travel_stats.achievements_unlocked }}/{{ travel_stats.achievements_total }})</h2>
+<div class="achievements-grid">
+  {% for a in travel_stats.achievements %}
+  <div class="achievement-card {% if a.unlocked %}unlocked{% else %}locked{% endif %}">
+    <span class="ach-icon">{{ a.icon }}</span>
+    <strong>{{ a.title }}</strong>
+    <p>{{ a.description }}</p>
+    {% if a.unlocked %}<span class="ach-badge">Unlocked</span>{% else %}<span class="ach-badge locked">Locked</span>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<div class="page-card glass-card" style="margin-top:1.5rem">
+  <p class="muted">Load demo passport stamps for presentations: <code>python manage.py load_demo_data</code></p>
+</div>
+{% if new_achievements %}{{ new_achievements|json_script:"new-achievements-data" }}{% endif %}
+{% endblock %}
+{% block extra_js %}
+{% if new_achievements %}
+<script>
+  (function () {
+    const el = document.getElementById('new-achievements-data');
+    if (!el) return;
+    let items = [];
+    try { items = JSON.parse(el.textContent); } catch (e) { return; }
+    items.forEach((ach, i) => {
+      setTimeout(() => {
+        let toast = document.querySelector('.toast-achievement');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.className = 'toast-achievement';
+          document.body.appendChild(toast);
+        }
+        toast.innerHTML = '<span class="ach-toast-icon">' + (ach.icon || '🏅') + '</span><div><strong>Achievement unlocked!</strong><br>' + ach.title + '</div>';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+      }, i * 800);
+    });
+  })();
+</script>
+{% endif %}
+{% endblock %}

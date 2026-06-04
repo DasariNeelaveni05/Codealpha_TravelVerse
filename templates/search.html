@@ -1,0 +1,62 @@
+{% extends 'app_base.html' %}
+{% block title %}Search{% endblock %}
+{% block main %}
+<h1>🔍 Search TravelVerse</h1>
+<p class="subtitle">Users, destinations, countries & hidden gems</p>
+
+<form method="get" class="search-bar large">
+  <input type="search" name="q" class="form-control" value="{{ q }}" placeholder="Users, cities, countries...">
+  <select name="category" class="form-control" style="max-width:200px">
+    <option value="">All categories</option>
+    {% for key, label in categories %}
+    <option value="{{ key }}" {% if category == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+<div class="category-chips">
+  {% for key, label in categories %}
+  <a href="?category={{ key }}" class="meta-chip {% if category == key %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+{% if q or category %}
+<section>
+  <h2 class="section-title">Travelers</h2>
+  <ul class="user-list" style="list-style:none">
+    {% for u in users %}
+    <li class="user-list-item">
+      <a href="{% url 'profile' u.username %}" class="user-list-link">
+        <span class="avatar-sm">{% if u.profile.avatar %}<img src="{{ u.profile.avatar.url }}" alt="">{% else %}{{ u.profile.badge_icon }}{% endif %}</span>
+        <span><strong>@{{ u.username }}</strong> <small>{{ u.profile.badge_full_name }} · {{ u.profile.explorer_score }} XP</small></span>
+      </a>
+    </li>
+    {% empty %}
+    <li>{% include 'partials/empty_state_card.html' with icon="👤" title="No travelers found" message="Try a different username or keyword." image_url="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80" %}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="section-title">Destinations & hidden gems</h2>
+  <div class="gems-grid">
+    {% for p in locations %}
+    <article class="gem-card">
+      <a href="{% url 'post_detail' p.pk %}">
+        {% with img=p.images.first %}
+        {% if img %}<img src="{{ img.image.url }}" alt="">{% endif %}
+        {% endwith %}
+        <div class="gem-info">
+          <h3>{{ p.location }}</h3>
+          <p>Gem score {{ p.hidden_gem_score }} · {{ p.get_category_display }}</p>
+        </div>
+      </a>
+    </article>
+    {% empty %}
+    {% include 'partials/empty_state_card.html' with icon="🧭" title="No destinations found" message="Try another search or pick a category filter." image_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80" %}
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+{% include 'partials/empty_state_card.html' with icon="🧭" title="Start exploring" message="Search for a destination, country, or explorer — or filter by category above." image_url="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80" %}
+{% endif %}
+{% endblock %}

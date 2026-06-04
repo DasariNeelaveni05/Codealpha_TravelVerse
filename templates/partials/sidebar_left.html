@@ -1,0 +1,53 @@
+<aside class="sidebar sidebar-left">
+    <a href="{% url 'landing' %}" class="logo brand">🌍 TravelVerse</a>
+    <p class="tagline">Hidden Gems Community</p>
+    <nav class="side-nav">
+        <a href="{% url 'feed' %}" class="nav-item {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">
+            <span class="nav-icon">🏠</span> Home Feed
+        </a>
+        <a href="{% url 'explore' %}" class="nav-item {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">
+            <span class="nav-icon">💎</span> Hidden Gems
+        </a>
+        <a href="{% url 'search' %}" class="nav-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+            <span class="nav-icon">🔍</span> Search
+        </a>
+        <a href="{% url 'reels' %}" class="nav-item {% if request.resolver_match.url_name == 'reels' %}active{% endif %}">
+            <span class="nav-icon">🎬</span> Reels
+        </a>
+        <a href="{% url 'blog_list' %}" class="nav-item {% if request.resolver_match.url_name == 'blog_list' %}active{% endif %}">
+            <span class="nav-icon">📖</span> Travelogues
+        </a>
+        <a href="{% url 'create_post' %}" class="nav-item">
+            <span class="nav-icon">📸</span> New Post
+        </a>
+        <a href="{% url 'bucket_list' %}" class="nav-item {% if request.resolver_match.url_name == 'bucket_list' %}active{% endif %}">
+            <span class="nav-icon">🪣</span> Travel Planner
+        </a>
+        <a href="{% url 'companions' %}" class="nav-item {% if request.resolver_match.url_name == 'companions' %}active{% endif %}">
+            <span class="nav-icon">🤝</span> Travel Buddies
+        </a>
+        <a href="{% url 'passport' %}" class="nav-item {% if request.resolver_match.url_name == 'passport' %}active{% endif %}">
+            <span class="nav-icon">🛂</span> Passport
+        </a>
+        <a href="{% url 'stats' %}" class="nav-item {% if request.resolver_match.url_name == 'stats' %}active{% endif %}">
+            <span class="nav-icon">📊</span> Travel Stats
+        </a>
+        <a href="{% url 'saved' %}" class="nav-item {% if request.resolver_match.url_name == 'saved' %}active{% endif %}">
+            <span class="nav-icon">🔖</span> Saved
+        </a>
+        <a href="{% url 'notifications' %}" class="nav-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+            <span class="nav-icon">🔔</span> Notifications
+            {% if unread_notifications %}<span class="nav-badge">{{ unread_notifications }}</span>{% endif %}
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'profile' user.username %}" class="nav-item">
+            <span class="nav-icon">👤</span> Profile
+        </a>
+        {% endif %}
+    </nav>
+    {% if user.is_authenticated %}
+    <a href="{% url 'logout' %}" class="btn btn-ghost btn-block">Log out</a>
+    {% else %}
+    <a href="{% url 'login' %}" class="btn btn-primary btn-block">Log in</a>
+    {% endif %}
+</aside>

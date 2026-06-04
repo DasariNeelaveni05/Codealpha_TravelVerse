@@ -1,0 +1,31 @@
+{% extends 'app_base.html' %}
+{% block title %}Followers · @{{ profile_user.username }}{% endblock %}
+{% block main %}
+<div class="page-header-row">
+  <div>
+    <a href="{% url 'profile' profile_user.username %}" class="back-link">← Back to profile</a>
+    <h1>Followers</h1>
+    <p class="subtitle">@{{ profile_user.username }}</p>
+  </div>
+</div>
+<ul class="user-list">
+  {% for u in users %}
+  <li class="user-list-item">
+    <a href="{% url 'profile' u.username %}" class="user-list-link">
+      <span class="avatar-sm">
+        {% if u.profile.avatar %}<img src="{{ u.profile.avatar.url }}" alt="">{% else %}🧭{% endif %}
+      </span>
+      <span>
+        <strong>@{{ u.username }}</strong>
+        <small class="badge-pill badge-{{ u.profile.badge|lower }}">{{ u.profile.badge }}</small>
+      </small>
+    </a>
+    {% if user != u %}
+    <button type="button" class="btn btn-sm btn-follow" data-follow="{{ u.username }}">Follow</button>
+    {% endif %}
+  </li>
+  {% empty %}
+  <li>{% include 'partials/empty_state_card.html' with icon="👥" title="No followers yet" message="Share hidden gems and engage with explorers to grow your audience." image_url="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80" %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Log In | TravelVerse{% endblock %}
+{% block body_class %}auth-layout{% endblock %}
+
+{% block content %}
+<div class="auth-premium-bg" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');">
+  <div class="auth-premium-overlay"></div>
+  
+  <div class="auth-card-glass stagger-card">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <span class="hero-badge" style="font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 999px; background: rgba(43, 108, 176, 0.15); color: var(--primary-ocean); font-weight: bold;">🌍 TravelVerse Log In</span>
+      <h1 style="font-size: 1.75rem; margin-top: 0.75rem; margin-bottom: 0.35rem;">Welcome Back Explorer</h1>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Sign in to access your digital passport, explore hidden gems, and view stories.</p>
+    </div>
+
+    <!-- Google Sign In Button (Placeholder styled beautifully) -->
+    <button type="button" class="google-auth-btn" onclick="alert('Google Sign-In integration clicked!')">
+      <svg viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+        <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.75H24v9h12.75c-.53 2.87-2.14 5.3-4.57 6.92l7.1 5.51C43.43 36.6 46.5 30.94 46.5 24z"></path>
+        <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.98-6.19z"></path>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.1-5.51c-2.2 1.48-5.01 2.32-8.79 2.32-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="divider-text">or sign in with email</div>
+
+    <form method="post" action="{% url 'auth_login' %}">
+      {% csrf_token %}
+      {% if form.errors %}
+      <div class="form-errors" style="color: var(--danger); font-size: 0.85rem; background: rgba(229, 62, 62, 0.1); border: 1px solid rgba(229, 62, 62, 0.2); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
+        Invalid username or password. Please try again.
+      </div>
+      {% endif %}
+
+      <div style="margin-bottom: 1.25rem;">
+        <label for="id_username" style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--text-secondary);">Username or Email</label>
+        <input type="text" name="username" id="id_username" class="form-control" required autofocus autocomplete="username" style="border-radius: 8px; border: 1px solid var(--border); padding: 0.7rem 1rem; font-family: inherit;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label for="id_password" style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--text-secondary);">Password</label>
+        <div class="password-input-wrapper">
+          <input type="password" name="password" id="id_password" class="form-control" required autocomplete="current-password" style="border-radius: 8px; border: 1px solid var(--border); padding: 0.7rem 1rem; font-family: inherit; width: 100%;">
+          <span class="password-toggle-icon" onclick="togglePasswordVisibility('id_password')">👁️</span>
+        </div>
+      </div>
+
+      <div class="auth-form-options">
+        <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: 600; cursor: pointer; color: var(--text-secondary);">
+          <input type="checkbox" name="remember_me" checked style="width: auto;"> Remember me
+        </label>
+        <a href="#" onclick="alert('Forgot password functionality simulated!')" style="color: var(--primary-ocean); text-decoration: none;">Forgot password?</a>
+      </div>
+
+      <input type="hidden" name="next" value="{% url 'feed' %}">
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1.5rem; width: 100%; border-radius: 999px;">Log In</button>
+    </form>
+    
+    <p class="auth-switch" style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--muted);">
+      New explorer? <a href="{% url 'register' %}" style="font-weight: 700; color: var(--primary-ocean); text-decoration: none;">Create a free account</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const toggleIcon = field.nextElementSibling;
+    if (field.type === 'password') {
+      field.type = 'text';
+      toggleIcon.textContent = '🙈';
+    } else {
+      field.type = 'password';
+      toggleIcon.textContent = '👁️';
+    }
+  }
+</script>
+{% endblock %}

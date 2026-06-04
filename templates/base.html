@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="ocean">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TravelVerse{% endblock %} | Social Travel Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    
+    <!-- TV Toast Container -->
+    <div id="tv-toast-container" class="tv-toast-container"></div>
+
+    {% block layout %}
+    <!-- Sticky Top Navbar -->
+    <nav class="top-navbar">
+        <a href="{% url 'landing' %}" class="nav-brand">🌍 TravelVerse</a>
+        
+        <form action="{% url 'search' %}" method="get" class="nav-search">
+            <input type="search" name="q" placeholder="Search destinations, users..." value="{{ request.GET.q }}">
+        </form>
+
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Navigation">☰</button>
+
+        <div class="nav-links" id="nav-links">
+            <a href="{% url 'feed' %}" class="nav-link-item {% if request.resolver_match.url_name == 'feed' %}active{% endif %}">🏠 Feed</a>
+            <a href="{% url 'explore' %}" class="nav-link-item {% if request.resolver_match.url_name == 'explore' %}active{% endif %}">🔭 Explore</a>
+            <a href="{% url 'reels' %}" class="nav-link-item {% if request.resolver_match.url_name == 'reels' %}active{% endif %}">🎬 Reels</a>
+            <a href="{% url 'bucket_list' %}" class="nav-link-item {% if request.resolver_match.url_name == 'bucket_list' %}active{% endif %}">🗺️ Bucket List</a>
+            <a href="{% url 'passport' %}" class="nav-link-item {% if request.resolver_match.url_name == 'passport' %}active{% endif %}">🛂 Passport</a>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'notifications' %}" class="nav-link-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    🔔 Notifications
+                    {% if unread_notifications %}
+                        <span class="nav-badge-count">{{ unread_notifications }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'profile' user.username %}" class="nav-link-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">👤 Profile</a>
+            {% endif %}
+
+            <div class="nav-actions">
+                <!-- Theme Toggle Selector -->
+                <div class="theme-dropdown">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Change Theme">🎨</button>
+                    <div class="theme-menu" id="theme-menu">
+                        <button class="theme-option" data-theme-val="ocean">🌊 Ocean Blue</button>
+                        <button class="theme-option" data-theme-val="sunset">🌅 Sunset Orange</button>
+                        <button class="theme-option" data-theme-val="coral">🌺 Coral Red</button>
+                        <button class="theme-option" data-theme-val="dark">🌙 Dark Mode</button>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="btn btn-ghost btn-sm">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline btn-sm">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div style="min-height: calc(100vh - 350px);">
+        {% block content %}{% endblock %}
+    </div>
+
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="{% url 'feed' %}" class="mobile-nav-item" aria-label="Home">🏠<span>Home</span></a>
+        <a href="{% url 'explore' %}" class="mobile-nav-item" aria-label="Explore">🔭<span>Explore</span></a>
+        <a href="{% url 'create_post' %}" class="mobile-nav-item mobile-nav-post" aria-label="Create post">➕<span>Share</span></a>
+        <a href="{% url 'reels' %}" class="mobile-nav-item" aria-label="Reels">🎬<span>Reels</span></a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' user.username %}" class="mobile-nav-item" aria-label="Profile">👤<span>Profile</span></a>
+        {% else %}
+            <a href="{% url 'login' %}" class="mobile-nav-item" aria-label="Login">👤<span>Login</span></a>
+        {% endif %}
+    </nav>
+
+    <!-- Responsive Footer -->
+    {% block footer %}
+      {% include 'partials/footer.html' %}
+    {% endblock %}
+    {% endblock %}
+
+    <script>
+        window.CSRF_TOKEN = '{{ csrf_token }}';
+        window.USER_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
+    </script>
+    <script src="{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
