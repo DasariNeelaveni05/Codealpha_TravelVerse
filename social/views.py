@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import date
 from decimal import Decimal
 
@@ -6,12 +7,15 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Count, Exists, OuterRef, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
+
+logger = logging.getLogger(__name__)
 
 from .forms import (
     BlogForm,
@@ -276,7 +280,12 @@ def create_post(request):
                 messages.error(request, 'Please upload at least one image or a video.')
                 return render(request, 'create_post.html', {'form': form, **_sidebar_context(request)})
             for idx, img in enumerate(images):
-                validate_image_upload(img)
+                try:
+                    validate_image_upload(img)
+                except ValidationError as e:
+                    post.delete()
+                    messages.error(request, e.message)
+                    return render(request, 'create_post.html', {'form': form, **_sidebar_context(request)})
                 PostImage.objects.create(post=post, image=img, order=idx)
             if video and not images:
                 messages.info(request, 'Video noted — upload a dedicated Reel for best playback.')
@@ -529,7 +538,14 @@ def toggle_reel_like(request, reel_id):
 @require_POST
 def add_comment(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning('Invalid JSON in comment request: %s', e)
+            return _json_error('Invalid JSON payload.')
+    else:
+        data = request.POST
     text = (data.get('text') or '').strip()
     parent_id = data.get('parent_id')
     if not text:

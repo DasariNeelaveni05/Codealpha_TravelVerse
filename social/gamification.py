@@ -2,7 +2,11 @@
 Explorer gamification: badges, XP, milestones, achievements, and hidden gem scoring.
 """
 
+import logging
+
 from django.db.models import Count
+
+logger = logging.getLogger(__name__)
 
 # (min_xp, slug, display_name, icon)
 BADGE_TIERS = [
@@ -176,6 +180,7 @@ def get_achievements_for_user(user):
         try:
             unlocked = check_fn(user)
         except Exception:
+            logger.exception('Achievement check %r failed for user %s', key, user.username)
             unlocked = False
         results.append({
             'key': key,

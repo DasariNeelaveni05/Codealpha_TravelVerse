@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
@@ -9,6 +11,8 @@ from django.urls import reverse
 
 from .gamification import badge_tier_for_score, explorer_progress
 from .utils import explorer_badge
+
+logger = logging.getLogger(__name__)
 
 
 class Profile(models.Model):
@@ -465,7 +469,11 @@ class GuideProfile(models.Model):
         import json
         try:
             return json.loads(self.destination_expertise)
-        except Exception:
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            logger.warning(
+                'Invalid JSON in destination_expertise for guide %s: %s',
+                self.user.username, e,
+            )
             return []
 
 
