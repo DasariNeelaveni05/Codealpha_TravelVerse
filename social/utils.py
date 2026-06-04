@@ -1,4 +1,5 @@
 import re
+
 from django.core.exceptions import ValidationError
 from PIL import Image
 
@@ -12,6 +13,10 @@ EMOJI_PATTERN = re.compile(
     r'\U0001F680-\U0001F6FF\U00002702-\U000027B0\U000024C2-\U0001F251]+',
     flags=re.UNICODE,
 )
+
+# ── Certified gem thresholds (single source of truth) ────────────
+CERTIFIED_GEM_MIN_VOTES = 3
+CERTIFIED_GEM_MIN_SCORE = 35
 
 
 def validate_image_upload(image):
@@ -55,12 +60,48 @@ def validate_text_with_emojis(value, field_name='Field', max_length=2000, max_em
 
 
 def explorer_badge(score):
-    if score >= 2000:
-        return 'Platinum'
-    if score >= 1000:
-        return 'Gold'
-    if score >= 400:
-        return 'Silver'
-    if score >= 100:
-        return 'Bronze'
-    return 'Explorer'
+    """Return the short badge name for a given explorer score.
+
+    Delegates to ``gamification.badge_tier_for_score`` so the thresholds
+    are defined in exactly one place (``BADGE_TIERS``).
+    """
+    from .gamification import badge_tier_for_score
+
+    return badge_tier_for_score(score)[2].split()[0]  # e.g. "Bronze" from "Bronze Explorer"
+
+
+def is_certified_gem(post):
+    """Single source-of-truth check for community-certified hidden gems."""
+    return (
+        post.is_hidden_gem
+        and post.gem_votes >= CERTIFIED_GEM_MIN_VOTES
+        and post.hidden_gem_score >= CERTIFIED_GEM_MIN_SCORE
+    )
+
+
+def received_likes_count(user):
+    """Count of likes received across all of a user's posts."""
+    from .models import Like
+
+    return Like.objects.filter(post__author=user).count()
+
+
+def toggle_instance(model_class, defaults=None, **lookup):
+    """Generic create-or-delete toggle.
+
+    Returns ``(instance_or_None, created: bool)``.  When the row already
+    existed it is deleted and ``(None, False)`` is returned.
+    """
+    obj, created = model_class.objects.get_or_create(defaults=defaults, **lookup)
+    if not created:
+        obj.delete()
+        return None, False
+    return obj, True
+
+
+def refresh_user_score(user):
+    """Recalculate explorer score and sync achievements for *user*."""
+    from .gamification import sync_user_achievements
+
+    user.profile.recalculate_explorer_score()
+    return sync_user_achievements(user)

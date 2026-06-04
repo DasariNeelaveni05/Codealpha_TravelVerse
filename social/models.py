@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from django.urls import reverse
 
 from .gamification import badge_tier_for_score, explorer_progress
-from .utils import explorer_badge
+from .utils import explorer_badge, is_certified_gem, received_likes_count
 
 
 class Profile(models.Model):
@@ -68,25 +68,19 @@ class Profile(models.Model):
         return 'https://i.pravatar.cc/150?u=' + self.user.username
 
     def get_badge(self):
-        if self.explorer_score >= 10000:
-            return ('Platinum', '🥇')
-        if self.explorer_score >= 5000:
-            return ('Gold', '🏅')
-        if self.explorer_score >= 2000:
-            return ('Silver', '🥈')
-        return ('Bronze', '🥉')
+        tier = badge_tier_for_score(self.explorer_score)
+        return (tier[2].split()[0], tier[3])
 
     def recalculate_explorer_score(self):
         """Gamification score from posts, engagement, followers, and travel activity."""
         user = self.user
-        received_likes = Like.objects.filter(post__author=user).count()
         gem_votes = HiddenGemVote.objects.filter(post__author=user).count()
         followers = Follow.objects.filter(following=user).count()
         score = (
             user.posts.count() * 15
             + user.reels.count() * 20
             + user.blogs.count() * 25
-            + received_likes * 2
+            + received_likes_count(user) * 2
             + followers * 5
             + gem_votes * 3
             + user.passport_stamps.count() * 8
@@ -195,7 +189,7 @@ class Post(models.Model):
 
     @property
     def is_certified_gem(self):
-        return self.is_hidden_gem and self.gem_votes >= 3 and self.hidden_gem_score >= 35
+        return is_certified_gem(self)
 
 
 class PostImage(models.Model):
