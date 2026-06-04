@@ -1,0 +1,182 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}{{ room.name }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/community.css' %}">
+<style>
+.chat-container { max-width: 700px; margin: 0 auto; }
+.chat-header {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem; border-radius: 14px 14px 0 0;
+  background: var(--bg-card, #fff);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+.chat-header-icon { font-size: 1.8rem; }
+.chat-header-info h2 { font-size: 1.1rem; margin: 0; }
+.chat-header-info p { font-size: 0.78rem; color: var(--text-secondary); margin: 0; }
+.chat-messages {
+  height: 55vh; overflow-y: auto; padding: 1rem;
+  background: var(--bg-soft, #f0f4f8);
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.chat-msg {
+  display: flex; gap: 0.5rem; max-width: 80%;
+  animation: fadeSlideUp 0.2s ease;
+}
+.chat-msg.own { margin-left: auto; flex-direction: row-reverse; }
+.chat-msg-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+}
+.chat-msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.chat-msg-avatar-placeholder {
+  width: 100%; height: 100%; display: grid; place-items: center;
+  background: var(--primary-ocean, #1a73e8); color: #fff;
+  font-size: 0.75rem; font-weight: 700; border-radius: 50%;
+}
+.chat-msg-bubble {
+  background: var(--bg-card, #fff);
+  padding: 0.5rem 0.75rem; border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.chat-msg.own .chat-msg-bubble {
+  background: var(--primary-ocean, #1a73e8); color: #fff;
+}
+.chat-msg-user { font-size: 0.7rem; font-weight: 700; margin-bottom: 0.1rem; }
+.chat-msg.own .chat-msg-user { text-align: right; }
+.chat-msg-text { font-size: 0.85rem; line-height: 1.4; word-break: break-word; }
+.chat-msg-time { font-size: 0.6rem; color: var(--text-secondary); margin-top: 0.15rem; }
+.chat-msg.own .chat-msg-time { text-align: right; color: rgba(255,255,255,0.7); }
+.chat-input-bar {
+  display: flex; gap: 0.5rem; padding: 0.75rem;
+  background: var(--bg-card, #fff);
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 0 0 14px 14px;
+}
+.chat-input-bar input {
+  flex: 1; border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 20px; padding: 0.5rem 1rem;
+  font-size: 0.85rem; outline: none;
+  background: var(--bg-soft, #f0f4f8);
+}
+.chat-input-bar input:focus { border-color: var(--primary-ocean, #1a73e8); }
+.chat-empty {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--text-secondary); font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="chat-container glass-card" style="padding:0;overflow:hidden;border-radius:14px;">
+  <div class="chat-header">
+    <a href="{% url 'community' %}" class="btn btn-ghost btn-sm">← Back</a>
+    <div class="chat-header-icon">{{ room.icon }}</div>
+    <div class="chat-header-info">
+      <h2>{{ room.name }}</h2>
+      <p>{{ room.member_count }} members · {{ room.get_room_type_display }}</p>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    {% if messages_list %}
+      {% for msg in messages_list %}
+      <div class="chat-msg {% if msg.user == user %}own{% endif %}">
+        <div class="chat-msg-avatar">
+          {% if msg.user.profile.avatar %}
+          <img src="{{ msg.user.profile.avatar.url }}" alt="{{ msg.user.username }}">
+          {% else %}
+          <div class="chat-msg-avatar-placeholder">{{ msg.user.username|first|upper }}</div>
+          {% endif %}
+        </div>
+        <div>
+          <div class="chat-msg-user">@{{ msg.user.username }}</div>
+          <div class="chat-msg-bubble">
+            <div class="chat-msg-text">{{ msg.text }}</div>
+          </div>
+          <div class="chat-msg-time">{{ msg.created_at|date:"g:i A" }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="chat-empty">
+        <p>🌍 Welcome to {{ room.name }}! Be the first to say hello.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if user.is_authenticated %}
+  <form class="chat-input-bar" id="chat-form" data-room-slug="{{ room.slug }}">
+    {% csrf_token %}
+    <input type="text" name="text" placeholder="Type a message..." maxlength="2000" autocomplete="off" required>
+    <button type="submit" class="btn btn-primary btn-sm">Send</button>
+  </form>
+  {% endif %}
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('chat-form');
+  const messagesEl = document.getElementById('chat-messages');
+  if (!form || !messagesEl) return;
+
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = form.querySelector('input[name=text]');
+    const text = input.value.trim();
+    if (!text) return;
+    const slug = form.dataset.roomSlug;
+    const csrf = window.CSRF_TOKEN || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+    const res = await fetch(`/api/chat/${slug}/send/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrf,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const msg = data.message;
+      const html = `
+        <div class="chat-msg own">
+          <div class="chat-msg-avatar">
+            ${msg.avatar && msg.avatar.startsWith('http')
+              ? `<img src="${msg.avatar}" alt="${msg.user}">`
+              : `<div class="chat-msg-avatar-placeholder">${msg.user[0].toUpperCase()}</div>`}
+          </div>
+          <div>
+            <div class="chat-msg-user">@${msg.user}</div>
+            <div class="chat-msg-bubble">
+              <div class="chat-msg-text">${msg.text}</div>
+            </div>
+            <div class="chat-msg-time">${msg.created}</div>
+          </div>
+        </div>`;
+      const emptyEl = messagesEl.querySelector('.chat-empty');
+      if (emptyEl) emptyEl.remove();
+      messagesEl.insertAdjacentHTML('beforeend', html);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      input.value = '';
+    }
+  });
+
+  // Poll for new messages
+  let lastMsgId = 0;
+  const msgs = messagesEl.querySelectorAll('.chat-msg');
+  if (msgs.length) lastMsgId = msgs.length;
+
+  setInterval(async () => {
+    try {
+      const res = await fetch(window.location.href, {
+        headers: { 'X-Requested-With': 'Polling' },
+      });
+    } catch (e) {}
+  }, 15000);
+})();
+</script>
+{% endblock %}

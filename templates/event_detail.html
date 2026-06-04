@@ -1,0 +1,54 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/community.css' %}">{% endblock %}
+
+{% block main %}
+<div style="max-width:800px;margin:0 auto;">
+  <!-- Event Header -->
+  <div class="glass-card" style="overflow:hidden;border-radius:14px;margin-bottom:1rem;">
+    <div class="event-card-cover" style="height:200px;background-image:url('{{ event.cover_url|default:'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&q=80' }}')">
+      <span class="event-type-badge" style="font-size:0.75rem;">{{ event.get_event_type_display }}</span>
+    </div>
+    <div style="padding:1.25rem;">
+      <h1 style="font-size:1.4rem;margin:0 0 0.5rem;">{{ event.title }}</h1>
+      {% if event.location %}<span class="event-meta">📍 {{ event.location }}{% if event.country %}, {{ event.country }}{% endif %}</span>{% endif %}
+      {% if event.start_date %}<span class="event-meta">📅 {{ event.start_date|date:"F d, Y g:i A" }}{% if event.end_date %} – {{ event.end_date|date:"F d, Y g:i A" }}{% endif %}</span>{% endif %}
+      <p style="font-size:0.88rem;margin:0.75rem 0;">{{ event.description }}</p>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem;">
+        <div style="font-size:0.85rem;color:var(--text-secondary);">
+          {{ event.attendee_count }}/{{ event.max_attendees }} attending · {{ event.spots_left }} spots left
+        </div>
+        <button type="button" class="btn {% if user_rsvp and user_rsvp.status == 'going' %}btn-outline{% else %}btn-primary{% endif %}" data-rsvp-event="{{ event.slug }}">
+          {% if user_rsvp and user_rsvp.status == 'going' %}Going ✓{% else %}RSVP{% endif %}
+        </button>
+      </div>
+
+      {% if event.organizer %}
+      <div style="margin-top:1rem;display:flex;align-items:center;gap:0.5rem;">
+        <span style="font-size:0.8rem;color:var(--text-secondary);">Organized by</span>
+        <a href="{% url 'profile' event.organizer.username %}" style="font-size:0.85rem;font-weight:600;text-decoration:none;">@{{ event.organizer.username }}</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Attendees -->
+  <div class="glass-card" style="padding:1rem;border-radius:14px;">
+    <h3 style="font-size:1rem;margin:0 0 0.75rem;">Attendees ({{ event.attendee_count }})</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+      {% for rsvp in attendees %}
+      <a href="{% url 'profile' rsvp.user.username %}" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.4rem;">
+        <span class="avatar-sm">{% if rsvp.user.profile.avatar %}<img src="{{ rsvp.user.profile.avatar.url }}" alt="">{% else %}{{ rsvp.user.profile.badge_icon }}{% endif %}</span>
+        <span style="font-size:0.8rem;font-weight:600;">@{{ rsvp.user.username }}</span>
+      </a>
+      {% empty %}
+      <p style="font-size:0.85rem;color:var(--text-secondary);">No attendees yet. Be the first to RSVP!</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/community.js' %}"></script>
+{% endblock %}

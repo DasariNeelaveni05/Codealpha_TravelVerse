@@ -1,0 +1,57 @@
+{% extends 'app_base.html' %}
+{% load static travelverse_tags %}
+{% block title %}{{ group.name }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/community.css' %}">{% endblock %}
+
+{% block main %}
+<div style="max-width:800px;margin:0 auto;">
+  <!-- Group Header -->
+  <div class="glass-card" style="overflow:hidden;border-radius:14px;margin-bottom:1rem;">
+    <div class="group-card-cover" style="height:160px;background-image:url('{{ group.cover_url|default:'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80' }}')">
+      <span class="group-icon" style="font-size:3rem;">{{ group.icon }}</span>
+    </div>
+    <div style="padding:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+          <h1 style="font-size:1.4rem;margin:0 0 0.25rem;">{{ group.name }}</h1>
+          <span class="group-category" style="font-size:0.8rem;">{{ group.get_category_display }}</span>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin:0.5rem 0;">{{ group.description }}</p>
+          <span style="font-size:0.8rem;color:var(--text-secondary);">👥 {{ group.member_count }} members</span>
+        </div>
+        <button type="button" class="btn {% if is_member %}btn-outline{% else %}btn-primary{% endif %}" data-join-group="{{ group.slug }}">
+          {% if is_member %}Leave Group{% else %}Join Group{% endif %}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Members -->
+  <div class="glass-card" style="padding:1rem;border-radius:14px;margin-bottom:1rem;">
+    <h3 style="font-size:1rem;margin:0 0 0.75rem;">Members</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:0.75rem;">
+      {% for m in members %}
+      <a href="{% url 'profile' m.user.username %}" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:0.4rem;">
+        <span class="avatar-sm">{% if m.user.profile.avatar %}<img src="{{ m.user.profile.avatar.url }}" alt="">{% else %}{{ m.user.profile.badge_icon }}{% endif %}</span>
+        <span style="font-size:0.8rem;font-weight:600;">@{{ m.user.username }}</span>
+      </a>
+      {% empty %}
+      <p style="font-size:0.85rem;color:var(--text-secondary);">No members yet. Be the first!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Related Posts -->
+  {% if posts %}
+  <h3 style="font-size:1rem;margin:0 0 0.75rem;">Related Posts</h3>
+  <div style="display:flex;flex-direction:column;gap:1rem;">
+    {% for post in posts %}
+    <div class="stagger-card">
+      {% include 'partials/feed_post.html' with post=post %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<script src="{% static 'js/community.js' %}"></script>
+{% endblock %}

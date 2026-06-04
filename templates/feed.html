@@ -3,98 +3,114 @@
 {% block title %}Home Feed{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="{% static 'css/feed.css' %}">
 {% endblock %}
 
 {% block content %}
-<!-- Full-width Stunning Hero Section -->
-<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');">
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>Explore the Unexplored</h1>
-    <p>Discover hidden travel gems shared by our global community of passionate explorers.</p>
-    <a href="#feed-container-start" class="btn btn-primary">Start Exploring</a>
-  </div>
-</section>
-
-    
-    <!-- Instagram-style Stories Carousel -->
-    <div id="feed-container-start" class="glass-card" style="padding: 1rem; margin-bottom: 1.5rem; border-radius: 16px;">
-      <h3 style="font-size: 0.9rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary-ocean);">Top Explorers Today</h3>
-      <div class="stories-container">
-        {% for profile in top_explorers %}
-        <div class="story-item" onclick="location.href='{% url 'profile' profile.user.username %}'">
-          <div class="story-avatar-wrap active-ring">
-            {% if profile.avatar %}
-            <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
-            {% else %}
-            <div style="width: 100%; height: 100%; display: grid; place-items: center; background: var(--bg-soft); font-size: 1.25rem;">{{ profile.badge_icon }}</div>
-            {% endif %}
-          </div>
-          <span>@{{ profile.user.username }}</span>
-        </div>
-        {% empty %}
-        <div class="story-item">
-          <div class="story-avatar-wrap active-ring">
-            <div style="width: 100%; height: 100%; display: grid; place-items: center; background: var(--bg-soft); font-size: 1.25rem;">🌍</div>
-          </div>
-          <span>TravelVerse</span>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Explorer XP Bar floating/prominent in feed -->
+<!-- Stories Bar -->
+<div class="ig-stories-bar glass-card">
+  <div class="ig-stories-scroll">
+    <!-- Your Story -->
     {% if user.is_authenticated %}
-    <div class="explorer-xp-widget">
-      <div class="explorer-progress-header">
-        <span>🥇 Explorer Rank: <strong>{{ user.profile.badge_full_name }}</strong></span>
-        <span style="margin-left: auto;"><strong>{{ user.profile.explorer_score }} XP</strong></span>
+    <a href="{% url 'create_post' %}" class="ig-story-item ig-story-add">
+      <div class="ig-story-avatar-ring add-ring">
+        {% if user.profile.avatar %}
+        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+        {% else %}
+        <div class="ig-story-placeholder">{{ user.profile.badge_icon }}</div>
+        {% endif %}
+        <span class="ig-story-plus">+</span>
       </div>
-      <div class="xp-bar-container">
-        <div class="xp-bar-fill animate-xp-bar" style="width: {{ user.profile.explorer_progress }}%;"></div>
-      </div>
-      <div class="progress-meta">
-        <span>Level {{ user.profile.xp_level }}</span>
-        <span>XP progress to next badge</span>
-      </div>
-    </div>
+      <span class="ig-story-username">Your Story</span>
+    </a>
     {% endif %}
 
-    <!-- Filter Category Pills -->
-    <div class="category-chips">
-      <a href="{% url 'feed' %}" class="meta-chip {% if not request.GET.category %}active{% endif %}">🔥 All Gems</a>
-      <a href="{% url 'feed' %}?category=beach" class="meta-chip {% if request.GET.category == 'beach' %}active{% endif %}">🏖️ Beaches</a>
-      <a href="{% url 'feed' %}?category=mountain" class="meta-chip {% if request.GET.category == 'mountain' %}active{% endif %}">⛰️ Mountains</a>
-      <a href="{% url 'feed' %}?category=adventure" class="meta-chip {% if request.GET.category == 'adventure' %}active{% endif %}">🧗 Adventure</a>
-      <a href="{% url 'feed' %}?category=historical" class="meta-chip {% if request.GET.category == 'historical' %}active{% endif %}">🏛️ Historic</a>
-      <a href="{% url 'feed' %}?category=food" class="meta-chip {% if request.GET.category == 'food' %}active{% endif %}">🍜 Food</a>
-      <a href="{% url 'feed' %}?category=nature" class="meta-chip {% if request.GET.category == 'nature' %}active{% endif %}">🌲 Nature</a>
-      <a href="{% url 'feed' %}?category=island" class="meta-chip {% if request.GET.category == 'island' %}active{% endif %}">🏝️ Islands</a>
-    </div>
-
-    <div class="feed-header">
-      <h2>Featured Travel Gems</h2>
-      <form action="{% url 'search' %}" method="get" class="search-bar">
-        <input type="search" name="q" class="form-control" placeholder="Search travelers or destinations...">
-        <button type="submit" class="btn btn-primary" aria-label="Search">🔍</button>
-      </form>
-    </div>
-
-    {% include 'partials/view_toggle.html' %}
-    {% include 'partials/leaflet_map.html' %}
-
-    <div id="feed-cards-view" data-cards-panel>
-      <div id="feed-container" class="feed-cards-panel" data-feed data-next-page="{% if posts.has_next %}{{ posts.next_page_number }}{% endif %}">
-        {% for post in posts %}
-          <div class="stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.1s)">
-            {% include 'partials/feed_post.html' with post=post %}
-          </div>
-        {% empty %}
-          {% include 'partials/empty_state_card.html' %}
-        {% endfor %}
+    <!-- Other Stories -->
+    {% for profile in stories %}
+    {% if profile.user != user %}
+    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item">
+      <div class="ig-story-avatar-ring {% if profile.explorer_score > 100 %}active-ring{% endif %}">
+        {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
+        {% else %}
+        <div class="ig-story-placeholder">{{ profile.badge_icon }}</div>
+        {% endif %}
       </div>
-      <div id="feed-loader" class="loader hidden">Loading more gems...</div>
-    </div>
+      <span class="ig-story-username">{{ profile.user.username|truncatechars:10 }}</span>
+    </a>
+    {% endif %}
+    {% endfor %}
+
+    {% for profile in top_explorers %}
+    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item">
+      <div class="ig-story-avatar-ring active-ring">
+        {% if profile.avatar %}
+        <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
+        {% else %}
+        <div class="ig-story-placeholder">{{ profile.badge_icon }}</div>
+        {% endif %}
+      </div>
+      <span class="ig-story-username">{{ profile.user.username|truncatechars:10 }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Feed Reels Carousel -->
+{% if feed_reels %}
+<div class="ig-reels-bar glass-card">
+  <div class="ig-reels-header">
+    <h3>Reels</h3>
+    <a href="{% url 'reels' %}" class="ig-see-all">See All</a>
+  </div>
+  <div class="ig-reels-scroll">
+    {% for reel in feed_reels %}
+    <a href="{% url 'reels' %}" class="ig-reel-card">
+      <div class="ig-reel-thumb">
+        {% if reel.thumbnail %}
+        <img src="{{ reel.thumbnail.url }}" alt="{{ reel.title }}">
+        {% elif reel.thumbnail_url %}
+        <img src="{{ reel.thumbnail_url }}" alt="{{ reel.title }}">
+        {% else %}
+        <div class="ig-reel-placeholder">🎬</div>
+        {% endif %}
+        <div class="ig-reel-play">▶</div>
+        <div class="ig-reel-info">
+          <span class="ig-reel-likes">❤️ {{ reel.like_count }}</span>
+        </div>
+      </div>
+      <span class="ig-reel-author">@{{ reel.author.username|truncatechars:12 }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Category Filter Pills -->
+<div class="ig-category-pills">
+  <a href="{% url 'feed' %}" class="ig-pill {% if not request.GET.category %}active{% endif %}">All</a>
+  <a href="{% url 'feed' %}?category=beach" class="ig-pill {% if request.GET.category == 'beach' %}active{% endif %}">🏖️ Beaches</a>
+  <a href="{% url 'feed' %}?category=mountain" class="ig-pill {% if request.GET.category == 'mountain' %}active{% endif %}">⛰️ Mountains</a>
+  <a href="{% url 'feed' %}?category=adventure" class="ig-pill {% if request.GET.category == 'adventure' %}active{% endif %}">🧗 Adventure</a>
+  <a href="{% url 'feed' %}?category=historical" class="ig-pill {% if request.GET.category == 'historical' %}active{% endif %}">🏛️ Historic</a>
+  <a href="{% url 'feed' %}?category=food" class="ig-pill {% if request.GET.category == 'food' %}active{% endif %}">🍜 Food</a>
+  <a href="{% url 'feed' %}?category=nature" class="ig-pill {% if request.GET.category == 'nature' %}active{% endif %}">🌲 Nature</a>
+  <a href="{% url 'feed' %}?category=island" class="ig-pill {% if request.GET.category == 'island' %}active{% endif %}">🏝️ Islands</a>
+</div>
+
+<!-- Main Feed -->
+<div id="feed-cards-view" data-cards-panel>
+  <div id="feed-container" class="ig-feed-stream" data-feed data-next-page="{% if posts.has_next %}{{ posts.next_page_number }}{% endif %}">
+    {% for post in posts %}
+      <div class="stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.08s)">
+        {% include 'partials/feed_post.html' with post=post %}
+      </div>
+    {% empty %}
+      {% include 'partials/empty_state_card.html' %}
+    {% endfor %}
+  </div>
+  <div id="feed-loader" class="loader hidden">Loading more gems...</div>
+</div>
 {% endblock %}
 
 {% block extra_js %}

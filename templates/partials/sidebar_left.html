@@ -23,6 +23,9 @@
         <a href="{% url 'bucket_list' %}" class="nav-item {% if request.resolver_match.url_name == 'bucket_list' %}active{% endif %}">
             <span class="nav-icon">🪣</span> Travel Planner
         </a>
+        <a href="{% url 'community' %}" class="nav-item {% if request.resolver_match.url_name == 'community' %}active{% endif %}">
+            <span class="nav-icon">🌐</span> Community
+        </a>
         <a href="{% url 'companions' %}" class="nav-item {% if request.resolver_match.url_name == 'companions' %}active{% endif %}">
             <span class="nav-icon">🤝</span> Travel Buddies
         </a>
