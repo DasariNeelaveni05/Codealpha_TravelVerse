@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="ocean">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelVerse — Discover Hidden Gems | Social Travel Network</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    
+</head>
+<body class="landing-page">
+    
+    <!-- TV Toast Container -->
+    <div id="tv-toast-container" class="tv-toast-container"></div>
+
+    
+    <!-- Sticky Top Navbar -->
+    <nav class="top-navbar">
+        <a href="/" class="nav-brand">🌍 TravelVerse</a>
+        
+        <form action="/search/" method="get" class="nav-search">
+            <input type="search" name="q" placeholder="Search destinations, users..." value="">
+        </form>
+
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle Navigation">☰</button>
+
+        <div class="nav-links" id="nav-links">
+            <a href="/feed/" class="nav-link-item ">🏠 Feed</a>
+            <a href="/explore/" class="nav-link-item ">🔭 Explore</a>
+            <a href="/reels/" class="nav-link-item ">🎬 Reels</a>
+            <a href="/bucket-list/" class="nav-link-item ">🗺️ Bucket List</a>
+            <a href="/passport/" class="nav-link-item ">🛂 Passport</a>
+            
+            
+
+            <div class="nav-actions">
+                <!-- Theme Toggle Selector -->
+                <div class="theme-dropdown">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Change Theme">🎨</button>
+                    <div class="theme-menu" id="theme-menu">
+                        <button class="theme-option" data-theme-val="ocean">🌊 Ocean Blue</button>
+                        <button class="theme-option" data-theme-val="sunset">🌅 Sunset Orange</button>
+                        <button class="theme-option" data-theme-val="coral">🌺 Coral Red</button>
+                        <button class="theme-option" data-theme-val="dark">🌙 Dark Mode</button>
+                    </div>
+                </div>
+
+                
+                    <a href="/login/" class="btn btn-outline btn-sm">Login</a>
+                    <a href="/register/" class="btn btn-primary btn-sm">Sign Up</a>
+                
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div style="min-height: calc(100vh - 350px);">
+        
+<section class="landing-hero">
+  <div class="hero-bg" data-hero-slides='[
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80"
+  ]' data-video-sources='[
+    "/static/videos/nyc-1.mp4",
+    "/static/videos/nyc-2.mp4",
+    "/static/videos/nyc-3.mp4",
+    "/static/videos/nyc-4.mp4"
+  ]'>
+    <!-- Place your NYC MP4s at static/videos/nyc-1.mp4 .. nyc-4.mp4 (Pexels/Coverr/Mixkit suggested) -->
+    <video id="hero-video" class="hero-video" autoplay muted loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80">
+      <source src="/static/videos/nyc-1.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-particles">
+    <span style="--x:12%; --y:30%; --d:10s;"></span>
+    <span style="--x:22%; --y:76%; --d:14s;"></span>
+    <span style="--x:34%; --y:18%; --d:12s;"></span>
+    <span style="--x:48%; --y:52%; --d:17s;"></span>
+    <span style="--x:64%; --y:28%; --d:13s;"></span>
+    <span style="--x:78%; --y:66%; --d:18s;"></span>
+    <span style="--x:86%; --y:12%; --d:11s;"></span>
+    <span style="--x:7%; --y:58%; --d:15s;"></span>
+    <span style="--x:52%; --y:84%; --d:16s;"></span>
+  </div>
+
+  <div class="hero-content">
+    <span class="hero-badge">✨ Travel storytelling for explorers</span>
+    <h1>Open the next chapter of your adventure.</h1>
+    <div class="hero-line">
+      <span class="hero-typed"></span>
+      <span class="cursor"></span>
+    </div>
+    <p>Share your journeys, connect with local guides, build your passport, and feel the wanderlust before you even leave.</p>
+
+    <div class="hero-actions">
+      <a href="/register/" class="btn btn-primary btn-hero">Start Exploring →</a>
+      <a href="/feed/" class="btn btn-outline btn-hero">Explore the Feed</a>
+    </div>
+
+    <div class="hero-stat-grid">
+      <div class="hero-stat"><strong>320+</strong><span>Hidden gems shared</span></div>
+      <div class="hero-stat"><strong>1.8K</strong><span>Explorer stories</span></div>
+      <div class="hero-stat"><strong>24</strong><span>World regions covered</span></div>
+    </div>
+
+    <div class="hero-marquee" role="region" aria-label="Live from the community">
+      <div class="marquee-track">
+        
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-preview-grid">
+    
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Why TravelVerse?</span>
+    <h2 class="section-title">A travel documentary for every explorer.</h2>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Hidden Gem Discovery</h3>
+      <p>Find off-grid destinations, boutique hideaways, and user-voted secret spots across the world.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Passport & Badges</h3>
+      <p>Collect passport stamps, unlock explorer badges, and watch your travel story come alive.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Reels & Stories</h3>
+      <p>Share vertical travel moments, see immersive reels, and feel each destination like a mini film.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Local Guide Connect</h3>
+      <p>Discover local experts, message guides directly, and plan a first-time travel experience with confidence.</p>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Trending Destinations</span>
+    <h2 class="section-title">Most loved hidden gems from the community.</h2>
+  </div>
+  <div class="destination-grid">
+    
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Explorer Leaderboard</span>
+    <h2 class="section-title">Meet the community's top adventurers.</h2>
+  </div>
+  <div class="leaderboard-grid">
+    
+    <article class="leaderboard-card">
+      <div>
+        <small>Explorer</small>
+        <h3>@neel</h3>
+        <p>64 points</p>
+      </div>
+      <div class="leader-rank">1</div>
+    </article>
+    
+    <article class="leaderboard-card">
+      <div>
+        <small>Explorer</small>
+        <h3>@Dasari_neelaveni</h3>
+        <p>0 points</p>
+      </div>
+      <div class="leader-rank">2</div>
+    </article>
+    
+  </div>
+</section>
+
+<section class="landing-section animate-on-scroll">
+  <div class="section-header">
+    <span class="section-tag">Travel Categories</span>
+    <h2 class="section-title">Discover new ways to explore.</h2>
+  </div>
+  <div class="category-grid">
+    <a href="/search/?category=beach" class="category-card"><span>🏖️</span><h3>Beaches</h3><small>Sunset coastlines and island escapes</small></a>
+    <a href="/search/?category=mountain" class="category-card"><span>🏔️</span><h3>Mountains</h3><small>High trails and alpine hideaways</small></a>
+    <a href="/search/?category=adventure" class="category-card"><span>🧗</span><h3>Adventure</h3><small>Thrilling treks and epic journeys</small></a>
+    <a href="/search/?category=food" class="category-card"><span>🍜</span><h3>Food</h3><small>Local flavors and tasting trails</small></a>
+    <a href="/search/?category=cultural" class="category-card"><span>🏛️</span><h3>Culture</h3><small>Heritage sites and hidden rituals</small></a>
+    <a href="/search/?category=island" class="category-card"><span>🌴</span><h3>Islands</h3><small>Turquoise lagoons and secret beaches</small></a>
+  </div>
+</section>
+
+    </div>
+
+    <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+        <a href="/feed/" class="mobile-nav-item" aria-label="Home">🏠<span>Home</span></a>
+        <a href="/explore/" class="mobile-nav-item" aria-label="Explore">🔭<span>Explore</span></a>
+        <a href="/post/create/" class="mobile-nav-item mobile-nav-post" aria-label="Create post">➕<span>Share</span></a>
+        <a href="/reels/" class="mobile-nav-item" aria-label="Reels">🎬<span>Reels</span></a>
+        
+            <a href="/login/" class="mobile-nav-item" aria-label="Login">👤<span>Login</span></a>
+        
+    </nav>
+
+    <!-- Responsive Footer -->
+    
+      <footer class="premium-footer">
+  <div class="footer-top">
+    <div class="footer-column footer-brand-info">
+      <a href="/" style="font-size: 1.5rem; font-weight: 900; color: var(--primary-ocean); text-decoration: none;">🌍 TravelVerse</a>
+      <p>A premium social network for travelers to discover, share, and track hidden gems around the globe. Pin your journeys, collect stamps, and climb the explorer leaderboard.</p>
+      <div class="footer-social-icons">
+        <a href="#" aria-label="Facebook">📘</a>
+        <a href="#" aria-label="Instagram">📸</a>
+        <a href="#" aria-label="Twitter">🐦</a>
+        <a href="#" aria-label="YouTube">📺</a>
+        <a href="#" aria-label="Pinterest">📌</a>
+      </div>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Explore</h4>
+      <ul>
+        <li><a href="/explore/">Hidden Gems</a></li>
+        <li><a href="/reels/">Travel Reels</a></li>
+        <li><a href="/blogs/">Travelogues</a></li>
+        <li><a href="/companions/">Travel Companions</a></li>
+        <li><a href="/stats/">Explorer Rankings</a></li>
+      </ul>
+    </div>
+    
+    <div class="footer-column">
+      <h4>Guides</h4>
+      <ul>
+        <li><a href="#">Europe Guides</a></li>
+        <li><a href="#">Asia Destinations</a></li>
+        <li><a href="#">Tropical Escapes</a></li>
+        <li><a href="#">Budget Planning</a></li>
+        <li><a href="#">Solo Travel Tips</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Community</h4>
+      <ul>
+        <li><a href="#">Active Challenges</a></li>
+        <li><a href="#">Featured Travelers</a></li>
+        <li><a href="#">XP Rewards System</a></li>
+        <li><a href="#">Safety Guidelines</a></li>
+        <li><a href="#">Community Forum</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press Room</a></li>
+        <li><a href="#">Contact Support</a></li>
+        <li><a href="#">Help Center</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-column">
+      <h4>Get the App</h4>
+      <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Download the TravelVerse mobile application:</p>
+      <div class="app-download-buttons">
+        <a href="#" class="app-download-btn">
+          <span>Get it on</span>
+          <strong>App Store</strong>
+        </a>
+        <a href="#" class="app-download-btn">
+          <span>Get it on</span>
+          <strong>Google Play</strong>
+        </a>
+      </div>
+      <div style="margin-top: 1.5rem;">
+        <h4 style="font-size: 0.8rem !important; margin-bottom: 0.5rem;">Newsletter</h4>
+        <form class="newsletter-form" onsubmit="event.preventDefault(); alert('Subscribed to Newsletter!');">
+          <input type="email" placeholder="Your email address" required aria-label="Email address">
+          <button type="submit" class="btn btn-primary btn-sm">Subscribe</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 TravelVerse. Designed for passionate explorers.</p>
+    <div class="footer-bottom-links">
+      <a href="#">Terms of Use</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Cookie Settings</a>
+    </div>
+    <div class="footer-language-selector">
+      <label for="lang-select" class="hidden">Language Selector</label>
+      <select id="lang-select">
+        <option value="en" selected>🌐 English</option>
+        <option value="es">🌐 Español</option>
+        <option value="fr">🌐 Français</option>
+        <option value="de">🌐 Deutsch</option>
+        <option value="it">🌐 Italiano</option>
+      </select>
+    </div>
+  </div>
+</footer>
+
+    
+    
+
+    <script>
+        window.CSRF_TOKEN = '9dTUAqnO39dky3NNwSAdnk4j5QFAmdaz81vXCGwKFn0Pr822GhzMqCCItNHNzWft';
+        window.USER_AUTHENTICATED = false;
+    </script>
+    <script src="/static/js/app.js"></script>
+    
+</body>
+</html>

@@ -212,6 +212,8 @@ class Reel(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reels')
     title = models.CharField(max_length=200, blank=True)
     video = models.FileField(upload_to='reels/', blank=True, null=True)
+    video_url = models.URLField(blank=True, null=True)
+    audio_url = models.URLField(blank=True, null=True)
     thumbnail = models.ImageField(upload_to='reels/thumbs/', blank=True, null=True)
     thumbnail_url = models.URLField(blank=True)
     caption = models.TextField(blank=True, max_length=500)

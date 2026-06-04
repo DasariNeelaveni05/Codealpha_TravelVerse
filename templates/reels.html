@@ -1,6 +1,17 @@
 {% extends 'app_base.html' %}
 {% block title %}Travel Reels{% endblock %}
 
+{% block body_class %}reels-page{% endblock %}
+
+{% block extra_css %}
+<style>
+  body.reels-page{ overflow: hidden; }
+  .reels-vertical-container{ padding-bottom: 0 !important; }
+  .reel-fullscreen-card{ margin-bottom: 0 !important; }
+  .page-header-row{ display:none; }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80');">
   <div class="hero-overlay"></div>
@@ -22,7 +33,11 @@
       {% for reel in reels %}
       <article class="reel-fullscreen-card" data-reel-card="{{ reel.id }}" data-guide-available="{% if reel.id in guide_reel_ids %}true{% else %}false{% endif %}">
         <div class="reel-media">
+          {% if reel.video %}
           <video src="{{ reel.video.url }}" muted playsinline preload="metadata" poster="{% if reel.thumbnail %}{{ reel.thumbnail.url }}{% else %}https://images.unsplash.com/photo-1519817650390-64a93db511aa?auto=format&fit=crop&w=1200&q=80{% endif %}"></video>
+          {% else %}
+          <img src="{% if reel.thumbnail %}{{ reel.thumbnail.url }}{% else %}https://images.unsplash.com/photo-1519817650390-64a93db511aa?auto=format&fit=crop&w=1200&q=80{% endif %}" alt="Reel thumbnail" />
+          {% endif %}
           <div class="reel-progress-bar"><div class="reel-progress-fill"></div></div>
           <button class="reel-mute-toggle" type="button" aria-label="Toggle mute">🔇</button>
           {% if reel.id in guide_reel_ids %}

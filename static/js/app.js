@@ -105,6 +105,52 @@
             heroBg.style.backgroundImage = `url('${slides[active]}')`;
           }, 7000);
         }
+
+        // Video rotation (if local/static video files are provided)
+        const videoSources = JSON.parse(heroBg.dataset.videoSources || '[]');
+        const heroVideo = document.getElementById('hero-video');
+        if (videoSources && videoSources.length && heroVideo) {
+          heroVideo.style.transition = 'opacity 0.4s ease-in-out';
+          heroVideo.style.opacity = '1';
+          heroVideo.muted = true;
+          heroVideo.loop = true;
+          heroVideo.preload = 'auto';
+
+          let vIdx = 0;
+          const swapVideo = (nextIdx) => {
+            try {
+              heroVideo.style.opacity = '0';
+              // Wait for the fade-out to complete
+              setTimeout(() => {
+                const nextSrc = videoSources[nextIdx];
+                // replace source and reload
+                while (heroVideo.firstChild) heroVideo.removeChild(heroVideo.firstChild);
+                const srcEl = document.createElement('source');
+                srcEl.src = nextSrc;
+                srcEl.type = 'video/mp4';
+                heroVideo.appendChild(srcEl);
+                heroVideo.load();
+                // Fade in immediately after loading starts
+                setTimeout(() => {
+                  heroVideo.play().catch(() => {});
+                  heroVideo.style.opacity = '1';
+                }, 100);
+              }, 200);
+            } catch (e) {
+              // ignore video swap errors
+            }
+          };
+
+          // Initialize first source if not already set
+          if (!heroVideo.querySelector('source') || heroVideo.querySelector('source').getAttribute('src') === '') {
+            swapVideo(0);
+          }
+
+          setInterval(() => {
+            vIdx = (vIdx + 1) % videoSources.length;
+            swapVideo(vIdx);
+          }, 6000);
+        }
       } catch (err) {
         // ignore invalid JSON
       }

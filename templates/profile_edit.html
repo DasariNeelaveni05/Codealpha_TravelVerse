@@ -7,13 +7,95 @@
   <form method="post" enctype="multipart/form-data" class="form-grid">
     {% csrf_token %}
     {% for field in form %}
-    <div class="form-full">
-      <label>{{ field.label }}</label>
-      {{ field }}
-      {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
-    </div>
+      {% if field.name == 'avatar' %}
+        <div class="form-full avatar-field">
+          <label>{{ field.label }}</label>
+          <div class="avatar-preview">
+            {% if user.profile.avatar %}
+              <img src="{{ user.profile.avatar.url }}" alt="avatar" id="current-avatar" />
+            {% else %}
+              <div class="ph-avatar">👤</div>
+            {% endif %}
+          </div>
+          {{ field }}
+          <div class="avatar-actions">
+            <button type="button" class="btn btn-outline" id="open-camera-btn">Take Photo</button>
+            <button type="button" class="btn btn-ghost" id="clear-avatar-btn">Remove</button>
+          </div>
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% else %}
+        <div class="form-full">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<span class="field-error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endif %}
     {% endfor %}
     <button type="submit" class="btn btn-primary">Save changes</button>
   </form>
 </div>
 {% endblock %}
+
+{% block footer %}{% endblock %}
+
+<div id="camera-modal" class="camera-modal" aria-hidden="true">
+  <div class="camera-content">
+    <video id="camera-video" autoplay playsinline></video>
+    <canvas id="camera-canvas" style="display:none;"></canvas>
+    <div class="camera-controls">
+      <button id="capture-btn" class="btn btn-primary">Capture</button>
+      <button id="cancel-camera-btn" class="btn btn-ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Camera capture logic: capture snapshot and attach to file input
+(function(){
+  const openBtn = document.getElementById('open-camera-btn');
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const captureBtn = document.getElementById('capture-btn');
+  const cancelBtn = document.getElementById('cancel-camera-btn');
+  const fileInput = document.querySelector('input[type=file][name="avatar"]');
+  let stream = null;
+
+  function openCamera(){
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(s => { stream = s; video.srcObject = s; modal.setAttribute('aria-hidden','false'); modal.style.display='flex'; })
+      .catch(e => { alert('Unable to access camera: '+e.message); });
+  }
+
+  function closeCamera(){
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+    video.srcObject = null; modal.setAttribute('aria-hidden','true'); modal.style.display='none';
+  }
+
+  function dataURLtoFile(dataurl, filename) {
+    var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+    return new File([u8arr], filename, {type:mime});
+  }
+
+  openBtn && openBtn.addEventListener('click', openCamera);
+  cancelBtn && cancelBtn.addEventListener('click', closeCamera);
+
+  captureBtn && captureBtn.addEventListener('click', function(){
+    const w = video.videoWidth, h = video.videoHeight; canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(video,0,0,w,h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const file = dataURLtoFile(dataUrl, 'camera-avatar.jpg');
+    // Attach file to input via DataTransfer
+    const dt = new DataTransfer(); dt.items.add(file); fileInput.files = dt.files;
+    // show preview
+    const img = document.getElementById('current-avatar'); if(img){ img.src = dataUrl; } 
+    closeCamera();
+  });
+
+  document.getElementById('clear-avatar-btn').addEventListener('click', function(){
+    if(fileInput){ fileInput.value = ''; }
+    const img = document.getElementById('current-avatar'); if(img){ img.src = ''; img.style.display='none'; }
+  });
+})();
+</script>

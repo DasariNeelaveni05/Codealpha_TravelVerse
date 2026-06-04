@@ -91,6 +91,11 @@ class ProfileEditForm(forms.ModelForm):
                 'rows': 4,
                 'placeholder': 'Tell explorers about your journeys...',
             }),
+            'avatar': forms.ClearableFileInput(attrs={
+                'class': 'form-control-file',
+                'accept': 'image/*',
+                'capture': 'environment',
+            }),
             'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Home base'}),
             'website': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://'}),
         }
