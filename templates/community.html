@@ -512,8 +512,8 @@
             {% if guide.is_available %}🟢 Available Now{% else %}🔴 Unavailable{% endif %}
           </span>
           <div class="guide-destinations">
-            {% for dest in guide.destinations.split ',' %}
-            <span class="dest-tag">{{ dest|strip }}</span>
+            {% for dest in guide.dest_list %}
+            <span class="dest-tag">{{ dest }}</span>
             {% endfor %}
           </div>
           <div class="guide-bio">{{ guide.bio }}</div>

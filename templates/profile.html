@@ -2,148 +2,495 @@
 {% load travelverse_tags %}
 {% block title %}@{{ profile_user.username }}'s Profile{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Profile Page Premium UI/UX Refinements */
+  .profile-hero {
+    position: relative;
+    height: 200px;
+    background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    border-radius: 20px;
+    margin-bottom: -50px; /* Pull profile header card up overlapping the hero */
+    box-shadow: inset 0 -60px 60px rgba(0,0,0,0.3);
+  }
+  .profile-header-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(43,108,176,0.06);
+    border: 1px solid rgba(43,108,176,0.08);
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 10;
+  }
+  .profile-header-flex {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  .profile-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .profile-avatar-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    object-fit: cover;
+    background: #fff;
+  }
+  .profile-avatar-placeholder {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    background: linear-gradient(135deg, var(--primary-ocean, #2B6CB0), var(--primary-teal, #38B2AC));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.5rem;
+  }
+  .profile-info-block {
+    flex: 1;
+    min-width: 0;
+  }
+  .profile-name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .profile-name-h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #1a202c;
+    margin: 0;
+  }
+  .profile-badge-pill {
+    background: linear-gradient(135deg, var(--primary-ocean, #2B6CB0), var(--primary-teal, #38B2AC));
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .profile-location-lbl {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-ocean, #2B6CB0);
+    margin-bottom: 8px;
+  }
+  .profile-bio-text {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: #4a5568;
+    margin-bottom: 16px;
+  }
+  
+  /* Progress XP Widget */
+  .xp-widget-wrap {
+    margin-bottom: 16px;
+  }
+  .xp-header-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4a5568;
+    margin-bottom: 6px;
+  }
+  .xp-bar-outer {
+    height: 8px;
+    background: #edf2f7;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .xp-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-ocean, #2B6CB0), var(--primary-teal, #38B2AC));
+    border-radius: 10px;
+    width: 0; /* Animated on load */
+    transition: width 1.5s cubic-bezier(0.1, 1, 0.1, 1);
+  }
+
+  /* Stat list counters */
+  .stat-counters-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 13.5px;
+    color: #718096;
+    border-top: 1px solid #f0f4f8;
+    padding-top: 14px;
+    margin-bottom: 16px;
+  }
+  .stat-counter-link {
+    color: #718096;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .stat-counter-link:hover {
+    color: var(--primary-ocean, #2B6CB0);
+  }
+  .stat-counter-val {
+    color: #1a202c;
+    font-weight: 800;
+  }
+
+  /* Actions */
+  .profile-actions-flex {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Geo Grid */
+  .geo-grid-wrap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .geo-stat-card-premium {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid rgba(43,108,176,0.08);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  }
+  .geo-stat-val-text {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--primary-ocean, #2B6CB0);
+    display: block;
+    margin-bottom: 2px;
+  }
+  .geo-stat-lbl-text {
+    font-size: 10.5px;
+    color: #718096;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* Achievements Section */
+  .ach-section-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(43,108,176,0.08);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.02);
+    margin-bottom: 24px;
+  }
+  .ach-section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary-ocean, #2B6CB0);
+    margin-bottom: 14px;
+  }
+  .ach-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+  .ach-card-premium {
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #edf2f7;
+    transition: transform 0.2s;
+  }
+  .ach-card-premium:hover {
+    transform: translateY(-2px);
+  }
+  .ach-card-premium.unlocked {
+    background: #fff;
+  }
+  .ach-card-premium.locked {
+    background: #f7fafc;
+    opacity: 0.5;
+  }
+  .ach-icon-emoji {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .ach-title-text {
+    font-size: 10px;
+    font-weight: 800;
+    color: #2d3748;
+    line-height: 1.2;
+    display: block;
+  }
+
+  /* Shared Journeys Grid */
+  .journeys-grid-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(43,108,176,0.08);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.02);
+  }
+  .journeys-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--primary-ocean, #2B6CB0);
+    margin-bottom: 14px;
+  }
+  .journeys-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .journey-photo-link {
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 1;
+    display: block;
+  }
+  .journey-photo-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s;
+  }
+  .journey-photo-link:hover img {
+    transform: scale(1.06);
+  }
+  .journey-gem-badge {
+    position: absolute;
+    bottom: 6px; right: 6px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+
+  /* Responsive Mobile Layout overrides */
+  @media (max-width: 768px) {
+    .profile-hero {
+      height: 140px;
+      margin-bottom: -40px;
+    }
+    .profile-header-card {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .profile-header-flex {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+    .profile-avatar-img, .profile-avatar-placeholder {
+      width: 90px;
+      height: 90px;
+    }
+    .profile-name-row {
+      justify-content: center;
+      gap: 8px;
+    }
+    .profile-name-h1 {
+      font-size: 19px;
+    }
+    .profile-location-lbl {
+      font-size: 12px;
+    }
+    .profile-bio-text {
+      font-size: 12.5px;
+      margin-bottom: 12px;
+    }
+    .stat-counters-row {
+      justify-content: center;
+      gap: 14px;
+      font-size: 12.5px;
+      padding-top: 10px;
+    }
+    .profile-actions-flex {
+      justify-content: center;
+    }
+    .profile-actions-flex .btn {
+      padding: 6px 16px;
+      font-size: 12px;
+    }
+    .geo-grid-wrap {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .geo-stat-card-premium {
+      padding: 10px;
+    }
+    .geo-stat-val-text {
+      font-size: 16px;
+    }
+    .ach-section-card, .journeys-grid-card {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .ach-grid-compact {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .journeys-photo-grid {
+      gap: 4px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block main %}
-<!-- Full-width Stunning Cover Photo Hero Section -->
-<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80'); height: 260px;">
-  <div class="hero-overlay"></div>
-  <div class="hero-content" style="padding-top: 4rem;">
-    <!-- Profile metadata could go here or floating below -->
+<!-- Background Cover Photo Hero -->
+<div class="profile-hero"></div>
+
+<!-- Profile Info Card -->
+<section class="profile-header-card reveal visible">
+  <div class="profile-header-flex">
+    <!-- Avatar -->
+    <div class="profile-avatar-wrap">
+      {% if profile_user.profile.avatar %}
+      <img src="{{ profile_user.profile.avatar.url }}" class="profile-avatar-img" alt="{{ profile_user.username }}">
+      {% else %}
+      <div class="profile-avatar-placeholder">{{ profile_user.profile.badge_icon }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Details -->
+    <div class="profile-info-block">
+      <div class="profile-name-row">
+        <h1 class="profile-name-h1">@{{ profile_user.username }}</h1>
+        <span class="profile-badge-pill">{{ profile_user.profile.badge_full_name }}</span>
+      </div>
+
+      {% if profile_user.profile.location %}
+      <div class="profile-location-lbl">📍 {{ profile_user.profile.location }}</div>
+      {% endif %}
+
+      <p class="profile-bio-text">
+        {{ profile_user.profile.bio|default:"No bio yet. Introduce yourself to the community!" }}
+      </p>
+
+      <!-- Explorer XP Progress -->
+      <div class="xp-widget-wrap">
+        <div class="xp-header-row">
+          <span>Explorer Score: <strong>{{ travel_stats.explorer_score }} XP</strong></span>
+          <span style="color:var(--primary-ocean);">Level {{ profile_user.profile.xp_level }}</span>
+        </div>
+        <div class="xp-bar-outer">
+          <div class="xp-bar-inner" id="profile-xp-bar" style="width: {{ profile_user.profile.explorer_progress }}%;"></div>
+        </div>
+      </div>
+
+      <!-- Stats Counters Links -->
+      <div class="stat-counters-row">
+        <span><span class="stat-counter-val">{{ travel_stats.posts }}</span> posts</span>
+        <a href="{% url 'followers' profile_user.username %}" class="stat-counter-link">
+          <span class="stat-counter-val" id="followers-count">{{ travel_stats.followers }}</span> followers
+        </a>
+        <a href="{% url 'following' profile_user.username %}" class="stat-counter-link">
+          <span class="stat-counter-val">{{ travel_stats.following }}</span> following
+        </a>
+        <span><span class="stat-counter-val">{{ travel_stats.bucket_list }}</span> saved</span>
+      </div>
+
+      <!-- Profile Action buttons -->
+      <div class="profile-actions-flex">
+        {% if user == profile_user %}
+        <a href="{% url 'profile_edit' %}" class="btn btn-outline btn-sm" style="border-radius:12px; font-weight:700;">⚙️ Edit Profile</a>
+        <a href="{% url 'passport' %}" class="btn btn-ghost btn-sm" style="border-radius:12px; font-weight:700;">🛂 Stamps Book</a>
+        <a href="{% url 'stats' %}" class="btn btn-ghost btn-sm" style="border-radius:12px; font-weight:700;">📊 Travel Stats</a>
+        {% else %}
+        <button type="button" class="btn btn-primary btn-sm btn-follow {% if is_following %}following{% endif %}" 
+                data-follow="{{ profile_user.username }}" style="border-radius:12px; font-weight:700; padding:6px 20px;">
+          {% if is_following %}✓ Following{% else %}+ Follow{% endif %}
+        </button>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </section>
 
-    
-    <!-- Profile Information Card (Glassmorphic) -->
-    <section class="profile-header glass-card stagger-card" style="position: relative; z-index: 10; margin-bottom: 2rem; padding: 2rem; border-radius: 20px;">
-      <div style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
-        <div class="profile-avatar">
-          {% if profile_user.profile.avatar %}
-          <img src="{{ profile_user.profile.avatar.url }}" alt="{{ profile_user.username }}" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid var(--surface); box-shadow: var(--shadow-lg);">
-          {% else %}
-          <div class="avatar-lg" style="width: 110px; height: 110px; border-radius: 50%; display: grid; place-items: center; font-size: 2.5rem; background: var(--primary-teal); color: #fff; border: 4px solid var(--surface); box-shadow: var(--shadow-lg);">
-            {{ profile_user.profile.badge_icon }}
-          </div>
-          {% endif %}
-        </div>
-        
-        <div class="profile-info" style="flex: 1;">
-          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-            <h1 style="font-size: 1.6rem; margin: 0;">@{{ profile_user.username }}</h1>
-            <span class="badge-pill" style="background: var(--accent-gradient); color: #fff; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.60rem; border-radius: 999px; text-transform: uppercase;">
-              {{ profile_user.profile.badge_full_name }}
-            </span>
-          </div>
-          
-          {% if profile_user.profile.location %}
-          <p class="bio" style="font-weight: 700; color: var(--primary-ocean); margin-bottom: 0.5rem;">📍 {{ profile_user.profile.location }}</p>
-          {% endif %}
-          <p class="bio" style="margin-bottom: 1.25rem; font-size: 0.95rem; color: var(--text-secondary);">
-            {{ profile_user.profile.bio|default:"No bio yet. Tap edit profile to introduce yourself!" }}
-          </p>
+<!-- Geographic Stats Grid -->
+<section class="geo-grid-wrap">
+  <div class="geo-stat-card-premium reveal visible">
+    <span class="geo-stat-val-text">🌍 {{ travel_stats.countries }}</span>
+    <span class="geo-stat-lbl-text">Countries</span>
+  </div>
+  <div class="geo-stat-card-premium reveal visible">
+    <span class="geo-stat-val-text">🏙️ {{ travel_stats.cities }}</span>
+    <span class="geo-stat-lbl-text">Cities</span>
+  </div>
+  <div class="geo-stat-card-premium reveal visible">
+    <span class="geo-stat-val-text">💎 {{ travel_stats.gems_discovered }}</span>
+    <span class="geo-stat-lbl-text">Gems</span>
+  </div>
+  <div class="geo-stat-card-premium reveal visible">
+    <span class="geo-stat-val-text">🎬 {{ travel_stats.reels }}</span>
+    <span class="geo-stat-lbl-text">Reels</span>
+  </div>
+</section>
 
-          <!-- Explorer XP Progress Bar -->
-          <div class="explorer-xp-widget" style="padding: 0; background: none; border: none; box-shadow: none; margin-bottom: 1.25rem;">
-            <div class="explorer-progress-header" style="font-size: 0.85rem; font-weight: 700;">
-              <span>Explorer Score: <strong>{{ travel_stats.explorer_score }} XP</strong></span>
-              <span style="margin-left: auto; color: var(--primary-ocean);">Level {{ profile_user.profile.xp_level }}</span>
-            </div>
-            <div class="xp-bar-container" style="height: 10px;">
-              <div class="xp-bar-fill" style="width: {{ profile_user.profile.explorer_progress }}%;"></div>
-            </div>
-          </div>
+<!-- Explorer Achievements -->
+<section class="ach-section-card reveal visible">
+  <h3 class="ach-section-title">🏅 Explorer Achievements ({{ travel_stats.achievements_unlocked }}/{{ travel_stats.achievements_total }})</h3>
+  <div class="ach-grid-compact">
+    {% for a in travel_stats.achievements %}
+    <div class="ach-card-premium {% if a.unlocked %}unlocked{% else %}locked{% endif %}" title="{{ a.desc }}">
+      <span class="ach-icon-emoji">{{ a.icon }}</span>
+      <span class="ach-title-text">{{ a.title }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
 
-          <!-- Profile statistics counters -->
-          <div class="profile-stats" style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem;">
-            <span><strong style="color: var(--text);">{{ travel_stats.posts }}</strong> posts</span>
-            <a href="{% url 'followers' profile_user.username %}" style="color: var(--text-secondary);"><strong id="followers-count" style="color: var(--text);">{{ travel_stats.followers }}</strong> followers</a>
-            <a href="{% url 'following' profile_user.username %}" style="color: var(--text-secondary);"><strong style="color: var(--text);">{{ travel_stats.following }}</strong> following</a>
-            <span><strong style="color: var(--text);">{{ travel_stats.bucket_list }}</strong> saved</span>
-          </div>
-
-          <div class="profile-actions" style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
-            {% if user == profile_user %}
-            <a href="{% url 'profile_edit' %}" class="btn btn-outline btn-sm">Edit Profile</a>
-            <a href="{% url 'passport' %}" class="btn btn-ghost btn-sm">🛂 Stamps Book</a>
-            <a href="{% url 'stats' %}" class="btn btn-ghost btn-sm">📊 Travel Stats</a>
-            {% else %}
-            <button type="button" class="btn btn-primary btn-sm btn-follow {% if is_following %}following{% endif %}" data-follow="{{ profile_user.username }}">
-              {% if is_following %}Following{% else %}Follow{% endif %}
-            </button>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Geographic Stats Cards -->
-    <section class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 2rem;">
-      <div class="stat-card highlight glass-card stagger-card" style="animation-delay: 0.05s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🌍 {{ travel_stats.countries }}</span>
-        <span>Countries visited</span>
-      </div>
-      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.1s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🏙️ {{ travel_stats.cities }}</span>
-        <span>Cities visited</span>
-      </div>
-      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.15s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">💎 {{ travel_stats.gems_discovered }}</span>
-        <span>Gems Shared</span>
-      </div>
-      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.2s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">🎬 {{ travel_stats.reels }}</span>
-        <span>Reels</span>
-      </div>
-    </section>
-
-    <!-- Achievements Badge Section -->
-    <section class="page-card glass-card stagger-card" style="margin-bottom: 2rem; animation-delay: 0.2s;">
-      <h3 style="margin-bottom: 1rem; color: var(--primary-ocean);">🏅 Explorer Achievements ({{ travel_stats.achievements_unlocked }}/{{ travel_stats.achievements_total }})</h3>
-      <div class="achievements-grid compact" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;">
-        {% for a in travel_stats.achievements %}
-        <div class="achievement-card {% if a.unlocked %}unlocked{% else %}locked{% endif %}" style="padding: 0.85rem; border-radius: 12px; text-align: center; border: 1px solid var(--border);">
-          <span style="font-size: 1.8rem; display: block; margin-bottom: 0.25rem;">{{ a.icon }}</span>
-          <strong style="font-size: 0.78rem; display: block; line-height: 1.2;">{{ a.title }}</strong>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
-
-    <!-- 3-Column Instagram-Style Grid for Posts -->
-    <section class="page-card glass-card stagger-card" style="animation-delay: 0.3s;">
-      <h3 style="margin-bottom: 1rem; color: var(--primary-ocean);">📸 Shared Journeys Grid</h3>
-      <div class="profile-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-        {% for post in posts %}
-        <a href="{% url 'post_detail' post.pk %}" class="grid-item stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.05s); border-radius: 8px; overflow: hidden; position: relative; aspect-ratio: 1;">
-          {% with img=post.images.first %}
-          {% if img %}
-          <img src="{{ img.image.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--transition);">
-          {% else %}
-          <div style="width: 100%; height: 100%; background: var(--bg-soft); display: grid; place-items: center; font-size: 2rem;">🌅</div>
-          {% endif %}
-          {% endwith %}
-          <span class="grid-gem-score" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold;">
-            💎 {{ post.hidden_gem_score }}
-          </span>
-        </a>
-        {% empty %}
-        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--muted);">
-          <p style="font-size: 2.5rem;">📸</p>
-          <p style="font-weight: 700; margin-top: 0.5rem;">No posts shared yet</p>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
-
+<!-- Shared Journeys Grid (Instagram style) -->
+<section class="journeys-grid-card reveal visible">
+  <h3 class="journeys-title">📸 Shared Journeys Grid</h3>
+  <div class="journeys-photo-grid">
+    {% for post in posts %}
+    <a href="{% url 'post_detail' post.pk %}" class="journey-photo-link">
+      {% if post.image %}
+      <img src="{{ post.image.url }}" alt="{{ post.location }}">
+      {% elif post.image_url %}
+      <img src="{{ post.image_url }}" alt="{{ post.location }}">
+      {% else %}
+      <div style="width: 100%; height: 100%; background: #f7fafc; display: grid; place-items: center; font-size: 2rem;">🌅</div>
+      {% endif %}
+      <span class="journey-gem-badge">💎 {{ post.hidden_gem_score }}</span>
+    </a>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #a0aec0;">
+      <div style="font-size: 40px; margin-bottom: 8px;">📸</div>
+      <p style="font-weight: 700; font-size: 13.5px; margin: 0;">No posts shared yet</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Trigger anim for progress bar fill after short delay
-    setTimeout(() => {
-      const fills = document.querySelectorAll('.xp-bar-fill');
-      fills.forEach(fill => {
-        // Target width is set by server-side templates, let's ensure it has standard smooth transition
-        fill.style.transition = 'width 1.5s cubic-bezier(0.1, 1, 0.1, 1)';
-      });
-    }, 100);
+    // Trigger smooth transition for the XP bar progress width
+    const bar = document.getElementById('profile-xp-bar');
+    if (bar) {
+      const targetWidth = bar.style.width;
+      bar.style.width = '0';
+      void bar.offsetWidth; // force reflow
+      bar.style.width = targetWidth;
+    }
   });
 </script>
 {% endblock %}

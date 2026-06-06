@@ -831,6 +831,11 @@ def community_view(request):
     groups = TravelGroup.objects.all()
     events = CommunityEvent.objects.filter(is_active=True).select_related('organizer')
     guides = GuideProfile.objects.filter(is_verified=True).select_related('user', 'user__profile')
+    
+    # Pre-split destinations to avoid .split in template
+    for guide in guides:
+        guide.dest_list = [d.strip() for d in guide.destinations.split(',') if d.strip()]
+        
     top = UserProfile.objects.select_related('user').order_by('-explorer_score')[:12]
     
     user_groups = TravelGroup.objects.none()
@@ -854,6 +859,11 @@ def community_view(request):
 @login_required
 def guides_view(request):
     guides = GuideProfile.objects.filter(is_verified=True).select_related('user', 'user__profile')
+    
+    # Pre-split destinations to avoid .split in template
+    for guide in guides:
+        guide.dest_list = [d.strip() for d in guide.destinations.split(',') if d.strip()]
+
     return render(request, 'guides.html', {
         'guides': guides,
         'show_footer': False,

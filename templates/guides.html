@@ -310,8 +310,8 @@
         {% endif %}
 
         <div class="guide-dests">
-          {% for dest in guide.destinations.split ',' %}
-          <span class="dest-tag">{{ dest|strip }}</span>
+          {% for dest in guide.dest_list %}
+          <span class="dest-tag">{{ dest }}</span>
           {% endfor %}
         </div>
 

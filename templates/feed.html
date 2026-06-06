@@ -6,23 +6,107 @@
 <link rel="stylesheet" href="{% static 'css/feed.css' %}">
 <style>
 .feed-wrapper, .feed-container, .main-feed, .content-area {
-    padding-top: 80px !important;
+    padding-top: 20px !important;
+}
+
+/* Premium Instagram-Style Stories Row overrides */
+.ig-stories-bar {
+  background: var(--surface, #fff) !important;
+  border: 1px solid rgba(43, 108, 176, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+  padding: 16px 12px !important;
+  border-radius: 20px !important;
+  overflow: visible !important; /* Make sure rings & text are never cut off */
+  margin-bottom: 20px !important;
 }
 .stories-row {
-    display: flex !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch !important;
-    gap: 12px !important;
-    padding: 14px 16px !important;
-    background: #fff !important;
-    border-radius: 16px !important;
-    margin-bottom: 16px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important; /* Allow popups/overflows */
+  -webkit-overflow-scrolling: touch !important; /* Native smooth momentum scroll on iOS */
+  gap: 16px !important; /* Clean modern spacing */
+  padding: 4px !important;
+  scrollbar-width: none !important; /* Hide scrollbar Firefox */
 }
-.stories-row::-webkit-scrollbar { display: none; }
-.story-item { flex-shrink: 0 !important; cursor: pointer; }
+.stories-row::-webkit-scrollbar {
+  display: none !important; /* Hide scrollbar Chrome/Safari */
+}
+.story-item {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 72px !important; /* Equal width for proper spacing */
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+.story-item:hover {
+  transform: scale(1.06) !important;
+}
+.ig-story-avatar-ring {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 50% !important;
+  padding: 2.5px !important;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important; /* Real Instagram Gradient */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.ig-story-avatar-ring.add-ring {
+  background: #fff !important;
+  border: 2px dashed var(--primary-ocean, #2B6CB0) !important;
+  padding: 0 !important;
+}
+.ig-story-avatar-ring img, .ig-story-avatar-ring .ig-story-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  border: 2px solid #fff !important;
+  object-fit: cover !important;
+}
+.ig-story-placeholder {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1) !important;
+  color: #475569 !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.ig-story-plus {
+  position: absolute !important;
+  bottom: 0px !important;
+  right: 0px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--primary-ocean, #2B6CB0) !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid #fff !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15) !important;
+}
+.ig-story-username {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary, #475569) !important;
+  text-align: center !important;
+  max-width: 72px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+  text-shadow: 0 1px 1px rgba(255,255,255,0.8) !important;
+}
 </style>
 {% endblock %}
 
