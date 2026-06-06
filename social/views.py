@@ -33,6 +33,7 @@ from .models import (
     ChatRoom,
     Comment,
     CommunityEvent,
+    Destination,
     DirectMessage,
     EventRSVP,
     Follow,
