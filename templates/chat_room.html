@@ -119,64 +119,58 @@
   const form = document.getElementById('chat-form');
   const messagesEl = document.getElementById('chat-messages');
   if (!form || !messagesEl) return;
+  
+  const roomSlug = form.dataset.roomSlug;
+  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+  const chatSocket = new WebSocket(
+    `${protocol}${window.location.host}/ws/chat/${roomSlug}/`
+  );
 
   messagesEl.scrollTop = messagesEl.scrollHeight;
 
-  form.addEventListener('submit', async (e) => {
+  chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    const isOwn = data.user === "{{ user.username }}";
+    
+    const html = `
+      <div class="chat-msg ${isOwn ? 'own' : ''}">
+        <div class="chat-msg-avatar">
+          ${data.avatar 
+            ? `<img src="${data.avatar}" alt="${data.user}">`
+            : `<div class="chat-msg-avatar-placeholder">${data.user[0].toUpperCase()}</div>`}
+        </div>
+        <div>
+          <div class="chat-msg-user">@${data.user}</div>
+          <div class="chat-msg-bubble">
+            <div class="chat-msg-text">${data.message}</div>
+          </div>
+          <div class="chat-msg-time">${data.created}</div>
+        </div>
+      </div>`;
+    
+    const emptyEl = messagesEl.querySelector('.chat-empty');
+    if (emptyEl) emptyEl.remove();
+    
+    messagesEl.insertAdjacentHTML('beforeend', html);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  };
+
+  chatSocket.onclose = function(e) {
+    console.error('Chat socket closed unexpectedly');
+  };
+
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
     const input = form.querySelector('input[name=text]');
-    const text = input.value.trim();
-    if (!text) return;
-    const slug = form.dataset.roomSlug;
-    const csrf = window.CSRF_TOKEN || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-    const res = await fetch(`/api/chat/${slug}/send/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrf,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      const msg = data.message;
-      const html = `
-        <div class="chat-msg own">
-          <div class="chat-msg-avatar">
-            ${msg.avatar && msg.avatar.startsWith('http')
-              ? `<img src="${msg.avatar}" alt="${msg.user}">`
-              : `<div class="chat-msg-avatar-placeholder">${msg.user[0].toUpperCase()}</div>`}
-          </div>
-          <div>
-            <div class="chat-msg-user">@${msg.user}</div>
-            <div class="chat-msg-bubble">
-              <div class="chat-msg-text">${msg.text}</div>
-            </div>
-            <div class="chat-msg-time">${msg.created}</div>
-          </div>
-        </div>`;
-      const emptyEl = messagesEl.querySelector('.chat-empty');
-      if (emptyEl) emptyEl.remove();
-      messagesEl.insertAdjacentHTML('beforeend', html);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+    const message = input.value.trim();
+    
+    if (message && chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(json.stringify({
+        'message': message
+      }));
       input.value = '';
     }
   });
-
-  // Poll for new messages
-  let lastMsgId = 0;
-  const msgs = messagesEl.querySelectorAll('.chat-msg');
-  if (msgs.length) lastMsgId = msgs.length;
-
-  setInterval(async () => {
-    try {
-      const res = await fetch(window.location.href, {
-        headers: { 'X-Requested-With': 'Polling' },
-      });
-    } catch (e) {}
-  }, 15000);
 })();
 </script>
 {% endblock %}

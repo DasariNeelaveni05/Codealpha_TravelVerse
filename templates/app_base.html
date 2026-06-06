@@ -1,10 +1,490 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+/* ── Premium Instagram-Style Layout Styles ──────────────── */
+
+/* Base Layout Shell */
+.app-shell-new {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg, #f4f7f6);
+}
+
+/* Sidebar Left */
+.side-left-shell {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid #f0f0f0;
+  box-shadow: 2px 0 20px rgba(0,0,0,0.03);
+  position: fixed;
+  top: 0; bottom: 0; left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.side-left-shell::-webkit-scrollbar { display: none; }
+
+/* Sidebar Brand */
+.sidebar-logo-wrap {
+  padding: 0 12px 24px;
+}
+.sidebar-logo {
+  font-size: 24px;
+  font-weight: 900;
+  text-decoration: none;
+  color: var(--primary-ocean, #2B6CB0);
+  display: block;
+}
+.sidebar-tagline {
+  font-size: 11px;
+  color: var(--text-secondary, #718096);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Sidebar Create button */
+.sidebar-btn-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--primary-ocean, #2B6CB0), var(--primary-teal, #38B2AC));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  height: 44px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  margin: 12px 12px 20px;
+  box-shadow: 0 4px 12px rgba(43,108,176,0.2);
+  transition: transform 0.2s;
+}
+.sidebar-btn-create:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+/* Sidebar Navigation links */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-secondary, #718096);
+  font-weight: 600;
+  font-size: 14px;
+  gap: 12px;
+  position: relative;
+  transition: all 0.2s;
+}
+.sidebar-link:hover {
+  background: var(--bg-soft, #f0f4f8);
+  color: var(--primary-ocean, #2B6CB0);
+}
+.sidebar-link.active {
+  background: linear-gradient(135deg, rgba(43,108,176,0.08) 0%, rgba(56,178,172,0.08) 100%);
+  color: var(--primary-ocean, #2B6CB0);
+}
+.sidebar-icon {
+  font-size: 18px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.sidebar-link:hover .sidebar-icon {
+  transform: scale(1.15);
+}
+.notif-badge {
+  background: #E53E3E;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+/* Sidebar Bottom Card */
+.sidebar-profile-card {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 16px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sidebar-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sidebar-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+}
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-username {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text, #1A202C);
+}
+.sidebar-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #EBF8FF;
+  color: #2B6CB0;
+  align-self: start;
+  margin-top: 2px;
+}
+.sidebar-logout {
+  font-size: 12px;
+  color: #E53E3E;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: #FFF5F5;
+  text-align: center;
+  transition: background 0.2s;
+}
+.sidebar-logout:hover {
+  background: #FED7D7;
+}
+
+/* Main Content Area */
+.main-content-shell {
+  flex: 1;
+  margin-left: 220px; /* offset for fixed left sidebar */
+  max-width: calc(100% - 220px);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: center;
+}
+.content-inner-shell {
+  width: 100%;
+  max-width: 680px; /* center column width */
+}
+
+/* Widgets Column */
+.widgets-shell {
+  width: 300px;
+  padding: 20px 0 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Mobile Header/Nav */
+.mobile-top-bar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+  z-index: 1100;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+.mobile-logo {
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+  color: var(--primary-ocean, #2B6CB0);
+}
+.mobile-top-icons {
+  display: flex;
+  gap: 16px;
+}
+.mobile-top-icon {
+  font-size: 20px;
+  text-decoration: none;
+  color: var(--text-secondary, #718096);
+  position: relative;
+}
+
+.mobile-bottom-tabbar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  z-index: 1100;
+  align-items: center;
+  justify-content: space-around;
+}
+.mobile-tab-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-secondary, #718096);
+  font-size: 20px;
+  width: 50px;
+  height: 100%;
+  position: relative;
+}
+.mobile-tab-link.active {
+  color: var(--primary-ocean, #2B6CB0);
+}
+.mobile-tab-label {
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Hide default theme header & footer on shell views */
+.top-navbar, .mobile-bottom-nav, footer, .footer-container {
+  display: none !important;
+}
+
+/* ── Tablet & Mobile Responsiveness ─────────────────────── */
+
+/* Tablet View (768px to 1024px) */
+@media (max-width: 1024px) {
+  .side-left-shell {
+    width: 72px; /* collapsed width */
+    padding: 24px 8px;
+  }
+  .sidebar-logo-wrap, .sidebar-tagline, .sidebar-label, .sidebar-profile-card .sidebar-user-info, .sidebar-logout {
+    display: none !important;
+  }
+  .sidebar-logo-wrap {
+    display: block !important;
+    padding: 0 0 16px;
+    text-align: center;
+  }
+  .sidebar-logo {
+    font-size: 20px;
+  }
+  .sidebar-btn-create {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    margin: 10px auto;
+    font-size: 0;
+    padding: 0;
+  }
+  .sidebar-btn-create::before {
+    content: '+';
+    font-size: 22px;
+  }
+  .sidebar-link {
+    justify-content: center;
+    padding: 0;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+  }
+  .sidebar-profile-card {
+    border-top: none;
+    align-items: center;
+  }
+  .sidebar-avatar, .sidebar-avatar-placeholder {
+    width: 36px; height: 36px;
+  }
+  .main-content-shell {
+    margin-left: 72px;
+    max-width: calc(100% - 72px);
+  }
+  .widgets-shell {
+    display: none !important; /* hide right widgets on tablet */
+  }
+}
+
+/* Mobile View (< 768px) */
+@media (max-width: 768px) {
+  .side-left-shell {
+    display: none !important; /* hide left sidebar */
+  }
+  .widgets-shell {
+    display: none !important; /* hide right widgets */
+  }
+  .main-content-shell {
+    margin-left: 0 !important;
+    max-width: 100% !important;
+    padding: 60px 12px 80px !important; /* padding for top and bottom bar */
+  }
+  .mobile-top-bar {
+    display: flex; /* show top bar */
+  }
+  .mobile-bottom-tabbar {
+    display: flex; /* show bottom tabbar */
+  }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="app-shell-new">
-  {% include 'partials/sidebar_left.html' %}
-  <main class="main-content">
-    {% block main %}{% endblock %}
-  </main>
-  {% include 'partials/sidebar_right.html' %}
+<!-- Mobile Top Bar -->
+<div class="mobile-top-bar">
+  <a href="{% url 'landing' %}" class="mobile-logo">🌍 TravelVerse</a>
+  <div class="mobile-top-icons">
+    <a href="{% url 'notifications' %}" class="mobile-top-icon">
+      🔔
+      {% if unread_notifications %}
+      <span style="position:absolute;top:-2px;right:-4px;background:#E53E3E;color:#fff;font-size:8px;font-weight:800;padding:1px 4px;border-radius:50%;">{{ unread_notifications }}</span>
+      {% endif %}
+    </a>
+    <a href="{% url 'community' %}" class="mobile-top-icon">✉️</a>
+  </div>
 </div>
+
+<!-- Main App Shell -->
+<div class="app-shell-new">
+  
+  <!-- Left Sidebar (Instagram-Style) -->
+  <aside class="side-left-shell">
+    <!-- Top Logo -->
+    <div class="sidebar-logo-wrap">
+      <a href="{% url 'landing' %}" class="sidebar-logo">🌍 TravelVerse</a>
+      <span class="sidebar-tagline">Hidden Gems Network</span>
+    </div>
+
+    <!-- Create Button -->
+    <a href="{% url 'create_post' %}" class="sidebar-btn-create">
+      <span>+ Create Post</span>
+    </a>
+
+    <!-- Nav Links -->
+    <nav class="sidebar-nav">
+      <a href="{% url 'feed' %}" class="sidebar-link {% if active_page == 'feed' %}active{% endif %}">
+        <span class="sidebar-icon">🏠</span>
+        <span class="sidebar-label">Feed</span>
+      </a>
+      <a href="{% url 'explore' %}" class="sidebar-link {% if active_page == 'explore' %}active{% endif %}">
+        <span class="sidebar-icon">🔭</span>
+        <span class="sidebar-label">Explore</span>
+      </a>
+      <a href="{% url 'reels' %}" class="sidebar-link {% if active_page == 'reels' %}active{% endif %}">
+        <span class="sidebar-icon">🎬</span>
+        <span class="sidebar-label">Reels</span>
+      </a>
+      <a href="{% url 'bucket_list' %}" class="sidebar-link {% if active_page == 'bucket_list' %}active{% endif %}">
+        <span class="sidebar-icon">🗺️</span>
+        <span class="sidebar-label">Bucket List</span>
+      </a>
+      <a href="{% url 'passport' %}" class="sidebar-link {% if active_page == 'passport' %}active{% endif %}">
+        <span class="sidebar-icon">🛂</span>
+        <span class="sidebar-label">Passport</span>
+      </a>
+      <a href="{% url 'guides' %}" class="sidebar-link {% if active_page == 'guides' %}active{% endif %}">
+        <span class="sidebar-icon">🧭</span>
+        <span class="sidebar-label">Guides</span>
+      </a>
+      <a href="{% url 'notifications' %}" class="sidebar-link {% if active_page == 'notifications' %}active{% endif %}">
+        <span class="sidebar-icon">🔔</span>
+        <span class="sidebar-label">Notifications</span>
+        {% if unread_notifications %}
+        <span class="notif-badge">{{ unread_notifications }}</span>
+        {% endif %}
+      </a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'profile' user.username %}" class="sidebar-link {% if active_page == 'profile' %}active{% endif %}">
+        <span class="sidebar-icon">👤</span>
+        <span class="sidebar-label">Profile</span>
+      </a>
+      <a href="{% url 'profile_edit' %}" class="sidebar-link {% if active_page == 'profile_edit' %}active{% endif %}">
+        <span class="sidebar-icon">⚙️</span>
+        <span class="sidebar-label">Settings</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <!-- Bottom User Pinned Card -->
+    {% if user.is_authenticated %}
+    <div class="sidebar-profile-card">
+      <a href="{% url 'profile' user.username %}" class="sidebar-user-row">
+        {% if user.profile.avatar %}
+        <img src="{{ user.profile.avatar.url }}" class="sidebar-avatar" alt="{{ user.username }}">
+        {% else %}
+        <div class="sidebar-avatar-placeholder">{{ user.username|first|upper }}</div>
+        {% endif %}
+        <div class="sidebar-user-info">
+          <span class="sidebar-username">@{{ user.username }}</span>
+          <span class="sidebar-badge">{{ user.profile.get_badge.0 }}</span>
+        </div>
+      </a>
+      <a href="{% url 'logout' %}" class="sidebar-logout">Logout</a>
+    </div>
+    {% endif %}
+  </aside>
+
+  <!-- Centered Main Content -->
+  <main class="main-content-shell">
+    <div class="content-inner-shell">
+      {% block main %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Right Widgets Column -->
+  <aside class="widgets-shell">
+    {% include 'partials/sidebar_right.html' %}
+  </aside>
+
+</div>
+
+<!-- Mobile Bottom Tab Bar -->
+<div class="mobile-bottom-tabbar">
+  <a href="{% url 'feed' %}" class="mobile-tab-link {% if active_page == 'feed' %}active{% endif %}">
+    🏠<span class="mobile-tab-label">Feed</span>
+  </a>
+  <a href="{% url 'explore' %}" class="mobile-tab-link {% if active_page == 'explore' %}active{% endif %}">
+    🔭<span class="mobile-tab-label">Explore</span>
+  </a>
+  <a href="{% url 'create_post' %}" class="mobile-tab-link" style="color:var(--primary-teal);">
+    ➕<span class="mobile-tab-label">Post</span>
+  </a>
+  <a href="{% url 'reels' %}" class="mobile-tab-link {% if active_page == 'reels' %}active{% endif %}">
+    🎬<span class="mobile-tab-label">Reels</span>
+  </a>
+  {% if user.is_authenticated %}
+  <a href="{% url 'profile' user.username %}" class="mobile-tab-link {% if active_page == 'profile' %}active{% endif %}">
+    👤<span class="mobile-tab-label">Profile</span>
+  </a>
+  {% else %}
+  <a href="{% url 'login' %}" class="mobile-tab-link">
+    👤<span class="mobile-tab-label">Login</span>
+  </a>
+  {% endif %}
+</div>
+
 {% endblock %}

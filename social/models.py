@@ -186,9 +186,15 @@ class Post(models.Model):
         first = self.images.first()
         return first.image if first else None
     def get_image(self):
-        if self.image:
+        if self.image and hasattr(self.image, 'url'):
             return self.image.url
-        return self.image_url or ''
+        if self.image_url:
+            return self.image_url
+        return 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80'
+    @property
+    def budget_per_day(self):
+        return self.budget or (f"${self.budget_amount}/day" if self.budget_amount else "N/A")
+
     @property
     def save_count(self):
         return self.saved_by.count()
@@ -210,31 +216,31 @@ class PostImage(models.Model):
 
 class Reel(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reels')
-    title = models.CharField(max_length=200, blank=True)
+    title = models.CharField(max_length=200)
     video = models.FileField(upload_to='reels/', blank=True, null=True)
-    video_url = models.URLField(blank=True, null=True)
-    audio_url = models.URLField(blank=True, null=True)
-    thumbnail = models.ImageField(upload_to='reels/thumbs/', blank=True, null=True)
-    thumbnail_url = models.URLField(blank=True)
-    caption = models.TextField(blank=True, max_length=500)
-    location = models.CharField(max_length=200, blank=True)
-    country = models.CharField(max_length=100, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    video_embed_url = models.URLField(blank=True, default='')
+    thumbnail_url = models.URLField(blank=True, default='')
+    caption = models.CharField(max_length=500, blank=True, default='')
+    location = models.CharField(max_length=200, blank=True, default='')
+    country = models.CharField(max_length=100, blank=True, default='')
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['-created_at']
+    def comment_count(self):
+        try:
+            return Comment.objects.filter(reel=self).count()
+        except Exception:
+            return 0
 
-    @property
     def like_count(self):
-        return self.reel_likes.count()
-    
-    @property
-    def display_thumbnail(self):
-        if self.thumbnail:
-            return self.thumbnail.url
-        return self.thumbnail_url or ''
+        try:
+            return ReelLike.objects.filter(reel=self).count()
+        except Exception:
+            return 0
+
+    def __str__(self):
+        return f"{self.author.username} - {self.title}"
 
 
 class Blog(models.Model):
@@ -260,7 +266,7 @@ class Blog(models.Model):
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
-    reel = models.ForeignKey(Reel, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+    reel = models.ForeignKey(Reel, on_delete=models.CASCADE, related_name='reel_comments', null=True, blank=True)
     blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     text = models.TextField(max_length=1000)
@@ -411,17 +417,27 @@ class Notification(models.Model):
         ('follow', 'Follow'),
         ('reply', 'Reply'),
         ('gem_vote', 'Hidden Gem Vote'),
+        ('message', 'Direct Message'),
     ]
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     actor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
     message = models.CharField(max_length=255)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
+    post = models.ForeignKey(Post, on_delete=models.SET_NULL, null=True, blank=True)
+    reel = models.ForeignKey('Reel', on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications')
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
+
+    @property
+    def sender(self):
+        return self.actor
+
+    @property
+    def notif_type(self):
+        return self.notification_type
 
 
 # ── NEW MODELS ──────────────────────────────────────────────────
@@ -454,9 +470,6 @@ class GuideProfile(models.Model):
     class Meta:
         ordering = ['-rating', '-total_tours']
 
-    class Meta:
-        ordering = ['-rating', '-total_tours']
-
     def __str__(self):
         return f"Guide: {self.user.username}"
 
@@ -467,6 +480,12 @@ class GuideProfile(models.Model):
             return json.loads(self.destination_expertise)
         except Exception:
             return []
+
+    @property
+    def city(self):
+        if self.destinations:
+            return self.destinations.split(',')[0].strip()
+        return ''
 
 
 class GuideRequest(models.Model):
@@ -777,6 +796,37 @@ class TripJoinRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.username} → {self.trip.destination} ({self.status})"
+
+
+class DirectMessage(models.Model):
+    """Private user-to-user messaging."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    text = models.TextField(max_length=2000)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender} to {self.recipient}"
+
+
+class TouristHelpRequest(models.Model):
+    """Travelers asking questions for local guides or experts to answer."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='help_requests')
+    location = models.CharField(max_length=200)
+    subject = models.CharField(max_length=200)
+    question = models.TextField(max_length=1500)
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Help in {self.location}: {self.subject}"
 
 
 # ── BACKWARD-COMPAT RE-EXPORTS ───────────────────────────────────

@@ -93,67 +93,34 @@
       });
     }, 150);
 
-    const heroBg = document.querySelector('.hero-bg');
-    if (heroBg) {
-      try {
-        const slides = JSON.parse(heroBg.dataset.heroSlides || '[]');
-        let active = 0;
-        if (slides.length) {
-          heroBg.style.backgroundImage = `url('${slides[0]}')`;
-          setInterval(() => {
-            active = (active + 1) % slides.length;
-            heroBg.style.backgroundImage = `url('${slides[active]}')`;
-          }, 7000);
-        }
-
-        // Video rotation (if local/static video files are provided)
-        const videoSources = JSON.parse(heroBg.dataset.videoSources || '[]');
-        const heroVideo = document.getElementById('hero-video');
-        if (videoSources && videoSources.length && heroVideo) {
-          heroVideo.style.transition = 'opacity 0.4s ease-in-out';
-          heroVideo.style.opacity = '1';
-          heroVideo.muted = true;
-          heroVideo.loop = true;
-          heroVideo.preload = 'auto';
-
-          let vIdx = 0;
-          const swapVideo = (nextIdx) => {
-            try {
-              heroVideo.style.opacity = '0';
-              // Wait for the fade-out to complete
-              setTimeout(() => {
-                const nextSrc = videoSources[nextIdx];
-                // replace source and reload
-                while (heroVideo.firstChild) heroVideo.removeChild(heroVideo.firstChild);
-                const srcEl = document.createElement('source');
-                srcEl.src = nextSrc;
-                srcEl.type = 'video/mp4';
-                heroVideo.appendChild(srcEl);
-                heroVideo.load();
-                // Fade in immediately after loading starts
-                setTimeout(() => {
-                  heroVideo.play().catch(() => {});
-                  heroVideo.style.opacity = '1';
-                }, 100);
-              }, 200);
-            } catch (e) {
-              // ignore video swap errors
-            }
-          };
-
-          // Initialize first source if not already set
-          if (!heroVideo.querySelector('source') || heroVideo.querySelector('source').getAttribute('src') === '') {
-            swapVideo(0);
-          }
-
-          setInterval(() => {
-            vIdx = (vIdx + 1) % videoSources.length;
-            swapVideo(vIdx);
-          }, 6000);
-        }
-      } catch (err) {
-        // ignore invalid JSON
+    (function() {
+      const slides = document.querySelectorAll('.hero-slide');
+      if (!slides.length) return;
+      let current = 0;
+      function nextSlide() {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
       }
+      setInterval(nextSlide, 8000);
+    })();
+
+    const storiesRow = document.querySelector('.stories-row');
+    if (storiesRow) {
+      let isDown = false, startX, scrollLeft;
+      storiesRow.addEventListener('mousedown', e => {
+        isDown = true;
+        startX = e.pageX - storiesRow.offsetLeft;
+        scrollLeft = storiesRow.scrollLeft;
+      });
+      storiesRow.addEventListener('mouseleave', () => isDown = false);
+      storiesRow.addEventListener('mouseup', () => isDown = false);
+      storiesRow.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - storiesRow.offsetLeft;
+        storiesRow.scrollLeft = scrollLeft - (x - startX) * 1.5;
+      });
     }
 
     const typedEl = document.querySelector('.hero-typed');
@@ -183,51 +150,201 @@
         }
       };
       typeNext();
-      if (cursor) cursor.classList.add('typing');
+      const current = phrases[phraseIndex];
+      if (isDeleting) {
+        typewriterEl.textContent = current.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        typewriterEl.textContent = current.substring(0, charIndex + 1);
+        charIndex++;
+      }
+      let speed = isDeleting ? 60 : 100;
+      if (!isDeleting && charIndex === current.length) {
+        speed = 2000; isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        speed = 400;
+      }
+      setTimeout(type, speed);
     }
+    if (typewriterEl) {
+      type();
+    }
+    // --- END NEW TYPEWRITER HERO TEXT LOGIC ---
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        entry.target.classList.toggle('visible', entry.isIntersecting);
-      });
-    }, { threshold: 0.25 });
-    document.querySelectorAll('.animate-on-scroll').forEach((el) => observer.observe(el));
+    // --- START NEW FLOATING PARTICLES LOGIC (from Part 3) ---
+    const canvas = document.getElementById('particles-canvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      const particles = Array.from({length: 60}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 3 + 1,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: -Math.random() * 0.6 - 0.2,
+        opacity: Math.random() * 0.6 + 0.2,
+        emoji: ['✈️','⭐','🌟','💫','✨'][Math.floor(Math.random()*5)]
+      }));
 
-    const reelFeed = document.querySelector('[data-reel-feed]');
-    if (reelFeed) {
-      const cards = Array.from(reelFeed.querySelectorAll('[data-reel-card]'));
-      const reelObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          const card = entry.target;
-          const video = card.querySelector('video');
-          const progress = card.querySelector('.reel-progress-fill');
-          if (!video) return;
-          if (entry.isIntersecting && entry.intersectionRatio > 0.65) {
-            video.play().catch(() => {});
-            if (progress && video.duration) {
-              video.addEventListener('timeupdate', () => {
-                progress.style.width = `${(video.currentTime / video.duration) * 100}%`;
-              });
-            }
-          } else {
-            video.pause();
-          }
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.globalAlpha = p.opacity;
+          ctx.font = `${p.size * 6}px serif`;
+          ctx.fillText(p.emoji, p.x, p.y);
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.y < -20) { p.y = canvas.height + 20; p.x = Math.random() * canvas.width; }
         });
-      }, { threshold: [0.65] });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    }
+    // --- END NEW FLOATING PARTICLES LOGIC ---
 
-      cards.forEach((card) => reelObserver.observe(card));
+    // --- START NEW LIVE COUNTER ANIMATION LOGIC (from Part 3) ---
+    function animateCounters() {
+      document.querySelectorAll('.stat-number').forEach(el => {
+        const target = parseInt(el.dataset.target);
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+          current += step;
+          if (current >= target) { current = target; clearInterval(timer); }
+          el.textContent = Math.floor(current).toLocaleString() + '+';
+        }, 16);
+      });
+    }
+    const statsBar = document.querySelector('.stats-bar');
+    if (statsBar) {
+      new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) animateCounters();
+      }, {threshold: 0.5}).observe(statsBar);
+    }
+    // --- END NEW LIVE COUNTER ANIMATION LOGIC ---
 
-      reelFeed.addEventListener('click', (e) => {
-        const muteBtn = e.target.closest('.reel-mute-toggle');
-        if (!muteBtn) return;
-        const card = e.target.closest('[data-reel-card]');
-        const video = card?.querySelector('video');
-        if (!video) return;
-        video.muted = !video.muted;
-        muteBtn.textContent = video.muted ? '🔇' : '🔊';
+    // --- START NEW SCROLL PROGRESS BAR LOGIC (from Part 3) ---
+    window.addEventListener('scroll', () => {
+      const el = document.getElementById('scroll-progress');
+      if (el) {
+        const pct = (window.scrollY / 
+          (document.body.scrollHeight - window.innerHeight)) * 100;
+        el.style.width = pct + '%';
+      }
+    });
+    // --- END NEW SCROLL PROGRESS BAR LOGIC ---
+
+    // --- START NEW GLOBAL SCROLL REVEAL LOGIC (from Part 3) ---
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+    // --- END NEW GLOBAL SCROLL REVEAL LOGIC ---
+
+    // --- START NEW LIKE BUTTON BOUNCE LOGIC (from Part 3) ---
+    document.body.addEventListener('click', (e) => {
+      const likeBtn = e.target.closest('.like-btn');
+      if (likeBtn) {
+        likeBtn.classList.add('bounce');
+        likeBtn.addEventListener('animationend', () => likeBtn.classList.remove('bounce'), {once:true});
+      }
+    });
+    // --- END NEW LIKE BUTTON BOUNCE LOGIC ---
+
+    // Story Viewer Logic
+    const storyViewer = document.getElementById('story-viewer');
+    if (storyViewer) {
+      const progressBar = document.getElementById('story-progress');
+      let storyTimer;
+
+      document.querySelectorAll('.ig-story-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const ring = item.querySelector('.ig-story-avatar-ring');
+          const username = ring.dataset.storyUsername;
+          const avatar = ring.dataset.storyAvatar;
+          const img = ring.dataset.storyImg;
+
+          document.getElementById('story-viewer-username').textContent = username;
+          document.getElementById('story-viewer-avatar').src = avatar;
+          document.getElementById('story-viewer-img').src = img;
+
+          storyViewer.classList.remove('hidden');
+          progressBar.style.width = '0%';
+          
+          // Simple 5-second story animation
+          progressBar.style.transition = 'width 5s linear';
+          setTimeout(() => progressBar.style.width = '100%', 50);
+          storyTimer = setTimeout(() => storyViewer.classList.add('hidden'), 5050);
+        });
+      });
+
+      document.querySelector('.story-close').addEventListener('click', () => {
+        storyViewer.classList.add('hidden');
+        clearTimeout(storyTimer);
+        progressBar.style.transition = 'none';
       });
     }
   });
+
+  // --- START NEW REEL AUTOPLAY AND MUTE LOGIC (from Part 1) ---
+  const reelFeed = document.querySelector('[data-reel-feed]');
+  if (reelFeed) {
+    const cards = Array.from(reelFeed.querySelectorAll('[data-reel-card]'));
+    const reelObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const card = entry.target;
+        const video = card.querySelector('.reel-video');
+        const bgImg = card.querySelector('.reel-bg-image');
+        if (!video && !bgImg) return;
+        
+        if (entry.isIntersecting && entry.intersectionRatio > 0.7) { // Changed threshold to 0.7
+          if (video) {
+            video.play().catch(() => {});
+          }
+          if (bgImg) {
+            bgImg.classList.add('ken-burns-active');
+          }
+        } else {
+          if (video) {
+            video.pause();
+            video.currentTime = 0;
+          }
+          if (bgImg) {
+            bgImg.classList.remove('ken-burns-active');
+          }
+        }
+      });
+    }, { threshold: 0.7 });
+
+    cards.forEach((card) => reelObserver.observe(card));
+
+    // Hide swipe hint after first scroll (new logic)
+    const hint = document.getElementById('swipe-hint');
+    if (hint) {
+      reelFeed.addEventListener('scroll', () => {
+        hint.style.opacity = '0';
+        setTimeout(() => hint.remove(), 500);
+      }, { once: true });
+    }
+  }
+  // --- END NEW REEL AUTOPLAY AND MUTE LOGIC ---
 
   // Like Toggle Handler
   document.body.addEventListener('click', async (e) => {
@@ -264,7 +381,7 @@
   });
 
   // Double-tap Like with dynamic heart burst
-  document.body.addEventListener('dblclick', async (e) => {
+  document.body.addEventListener('click', async (e) => { // Changed to click for double-tap detection
     const media = e.target.closest('[data-double-tap-like]');
     if (!media || !window.USER_AUTHENTICATED) return;
     
@@ -292,6 +409,30 @@
         btn.querySelector('.icon-heart').textContent = '❤️';
         const countEl = document.querySelector(`[data-like-count="${id}"]`);
         if (countEl) countEl.textContent = `${data.count} likes`;
+        showToast('Post liked!', 'success');
+      }
+    }
+  });
+
+  // --- START NEW DOUBLE-TAP HEART BURST LOGIC (from Part 3) ---
+  let lastTap = 0;
+  document.body.addEventListener('click', (e) => {
+    const wrap = e.target.closest('.post-image-wrap');
+    if (!wrap) return;
+
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      const heart = document.createElement('div');
+      heart.innerHTML = '❤️';
+      heart.className = 'floating-heart';
+      heart.style.left = e.offsetX + 'px';
+      heart.style.top = e.offsetY + 'px';
+      wrap.appendChild(heart);
+      setTimeout(() => heart.remove(), 1000);
+      
+      const postId = wrap.dataset.postId;
+      const likeBtn = document.querySelector(`.like-btn[data-id="${postId}"]`);
+      if (likeBtn) {
         showToast('Post liked!', 'success');
       }
     }
@@ -432,7 +573,7 @@
     const onScroll = () => {
       if (!nextPage) return;
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      if (scrollTop + clientHeight >= scrollHeight - 200) loadMore();
+      if (scrollTop + clientHeight >= scrollHeight - 800) loadMore(); // Trigger earlier for smoother infinite scroll
     };
     window.addEventListener('scroll', onScroll);
   }
@@ -456,4 +597,24 @@
       setTimeout(() => el.remove(), 300);
     }, 4000);
   });
+
+  // --- START NEW PAGE TRANSITION LOGIC (from Part 3) ---
+  document.querySelectorAll('a[href]').forEach(link => {
+    // Only apply to internal links and exclude links with 'no-transition' class
+    if (link.hostname === window.location.hostname && !link.classList.contains('no-transition')) {
+      link.addEventListener('click', (e) => {
+        const overlay = document.getElementById('page-overlay');
+        if (overlay) {
+          overlay.classList.add('active');
+          setTimeout(() => { window.location.href = link.href; }, 250);
+          e.preventDefault();
+        }
+      });
+    }
+  });
+  window.addEventListener('pageshow', () => {
+    const overlay = document.getElementById('page-overlay');
+    if (overlay) overlay.classList.remove('active');
+  });
+  // --- END NEW PAGE TRANSITION LOGIC ---
 })();

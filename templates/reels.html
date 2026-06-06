@@ -1,97 +1,487 @@
-{% extends 'app_base.html' %}
-{% block title %}Travel Reels{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Travel Reels | TravelVerse{% endblock %}
 
-{% block body_class %}reels-page{% endblock %}
+{% block layout %}
+<!DOCTYPE html>
+<html lang="en" data-theme="ocean">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Reels | TravelVerse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: #000; }
 
-{% block extra_css %}
-<style>
-  body.reels-page{ overflow: hidden; }
-  .reels-vertical-container{ padding-bottom: 0 !important; }
-  .reel-fullscreen-card{ margin-bottom: 0 !important; }
-  .page-header-row{ display:none; }
-</style>
-{% endblock %}
+    /* ── Top mini-nav ─────────────────────────────────── */
+    .reels-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+    .reels-nav-logo {
+      color: #fff; font-weight: 800; font-size: 18px; text-decoration: none;
+    }
+    .reels-nav-actions { display: flex; gap: 12px; align-items: center; }
+    .reels-nav-btn {
+      color: #fff; background: rgba(255,255,255,0.15); border: none;
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 700;
+      cursor: pointer; text-decoration: none; backdrop-filter: blur(8px);
+      transition: background 0.2s;
+    }
+    .reels-nav-btn:hover { background: rgba(255,255,255,0.28); }
 
-{% block content %}
-<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3ac?auto=format&fit=crop&w=1600&q=80');">
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>Travel Reels</h1>
-    <p>Swipe up through immersive short journeys, save your favorites, and feel the sunrise from every continent.</p>
-    <a href="{% url 'create_reel' %}" class="btn btn-primary">+ Upload Your Reel</a>
+    /* ── Reels container ──────────────────────────────── */
+    .reels-feed {
+      height: 100dvh;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .reels-feed::-webkit-scrollbar { display: none; }
+
+    /* ── Single reel card ─────────────────────────────── */
+    .reel-card {
+      position: relative;
+      width: 100%; height: 100dvh;
+      scroll-snap-align: start;
+      overflow: hidden;
+      display: flex; align-items: flex-end;
+      background: #000;
+    }
+
+    /* Background image with Ken Burns */
+    .reel-bg {
+      position: absolute; inset: 0;
+      overflow: hidden;
+    }
+    .reel-bg img, .reel-bg video {
+      width: 100%; height: 100%; object-fit: cover;
+      animation: kenBurns 8s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    @keyframes kenBurns {
+      0%   { transform: scale(1)    translate(0%,    0%); }
+      100% { transform: scale(1.12) translate(-2%, -1.5%); }
+    }
+
+    /* Gradient overlay */
+    .reel-gradient {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.88) 0%,
+        rgba(0,0,0,0.35) 40%,
+        rgba(0,0,0,0.15) 70%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+
+    /* ── Left-bottom info panel ───────────────────────── */
+    .reel-info {
+      position: absolute;
+      bottom: 80px; left: 16px;
+      max-width: calc(100% - 88px);
+      color: #fff;
+      z-index: 10;
+    }
+    .reel-user-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .reel-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2.5px solid #fff;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .reel-avatar-placeholder {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2.5px solid #fff;
+      background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 18px;
+      flex-shrink: 0;
+    }
+    .reel-username {
+      font-weight: 700; font-size: 15px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .reel-follow-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1.5px solid #fff;
+      color: #fff; border-radius: 16px;
+      padding: 3px 12px; font-size: 12px; font-weight: 700;
+      cursor: pointer; backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+    .reel-follow-btn:hover { background: rgba(255,255,255,0.35); }
+    .reel-location {
+      font-size: 13px; color: rgba(255,255,255,0.85);
+      margin-bottom: 6px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    .reel-caption {
+      font-size: 14px; line-height: 1.5;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .reel-audio {
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ── Right action buttons ─────────────────────────── */
+    .reel-actions {
+      position: absolute;
+      right: 16px; bottom: 100px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 20px;
+      z-index: 10;
+    }
+    .reel-action {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .reel-action-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      backdrop-filter: blur(8px);
+      transition: transform 0.15s, background 0.2s;
+      color: #fff; text-decoration: none;
+    }
+    .reel-action-btn:hover { transform: scale(1.12); background: rgba(255,255,255,0.28); }
+    .reel-action-btn.liked { background: rgba(239,68,68,0.35); }
+    .reel-action-label {
+      font-size: 11px; color: rgba(255,255,255,0.85);
+      font-weight: 600;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    /* ── Progress bar ─────────────────────────────────── */
+    .reel-progress {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: rgba(255,255,255,0.2); z-index: 20;
+    }
+    .reel-progress-fill {
+      height: 100%; width: 0;
+      background: #fff;
+    }
+
+    /* Mobile bottom padding */
+    @media (max-width: 768px) {
+      .reel-info { bottom: 70px; }
+      .reel-actions { bottom: 80px; right: 12px; }
+      .reel-action-btn { width: 42px; height: 42px; font-size: 19px; }
+    }
+
+    /* Swipe hint */
+    #swipe-hint {
+      position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.6); font-size: 13px; z-index: 50;
+      pointer-events: none; text-align: center;
+      transition: opacity 0.5s;
+    }
+    #swipe-hint span { display: block; animation: bounce 1.5s infinite; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top mini-nav -->
+<nav class="reels-nav">
+  <a href="{% url 'landing' %}" class="reels-nav-logo">🌍 TravelVerse</a>
+  <div class="reels-nav-actions">
+    <a href="{% url 'feed' %}" class="reels-nav-btn">🏠 Feed</a>
+    <a href="{% url 'create_reel' %}" class="reels-nav-btn">+ Upload Reel</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'profile' user.username %}" class="reels-nav-btn">👤 {{ user.username }}</a>
+    {% else %}
+    <a href="{% url 'login' %}" class="reels-nav-btn">Login</a>
+    {% endif %}
   </div>
-</section>
+</nav>
 
-    <div class="page-header-row">
-      <div>
-        <h2>🎬 Vertical Travel Stories</h2>
-        <p class="subtitle">Scroll or swipe to snap to the next reel. Tap the heart to react instantly.</p>
-      </div>
+<!-- Reels feed -->
+<div class="reels-feed" id="reels-feed">
+  {% for reel in reels %}
+  <div class="reel-card" id="reel-{{ reel.id }}">
+
+    <!-- Background media -->
+    <div class="reel-bg">
+      {% if reel.video %}
+      <video src="{{ reel.video.url }}"
+             muted playsinline preload="metadata"
+             poster="{{ reel.thumbnail_url|default:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80' }}"></video>
+      {% elif reel.thumbnail_url %}
+      <img src="{{ reel.thumbnail_url }}"
+           alt="{{ reel.location|default:'Travel Reel' }}"
+           loading="lazy">
+      {% else %}
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80"
+           alt="Travel Reel" loading="lazy">
+      {% endif %}
     </div>
 
-    <div class="reels-vertical-container" data-reel-feed>
-      {% for reel in reels %}
-      <article class="reel-fullscreen-card" data-reel-card="{{ reel.id }}" data-guide-available="{% if reel.id in guide_reel_ids %}true{% else %}false{% endif %}">
-        <div class="reel-media">
-          {% if reel.video %}
-          <video src="{{ reel.video.url }}" muted playsinline preload="metadata" poster="{% if reel.thumbnail %}{{ reel.thumbnail.url }}{% else %}https://images.unsplash.com/photo-1519817650390-64a93db511aa?auto=format&fit=crop&w=1200&q=80{% endif %}"></video>
+    <div class="reel-gradient"></div>
+
+    <!-- Left-bottom info -->
+    <div class="reel-info">
+      <div class="reel-user-row">
+        <a href="{% url 'profile' reel.author.username %}">
+          {% if reel.author.profile.avatar %}
+          <img src="{{ reel.author.profile.avatar.url }}"
+               class="reel-avatar" alt="{{ reel.author.username }}">
           {% else %}
-          <img src="{% if reel.thumbnail %}{{ reel.thumbnail.url }}{% else %}https://images.unsplash.com/photo-1519817650390-64a93db511aa?auto=format&fit=crop&w=1200&q=80{% endif %}" alt="Reel thumbnail" />
+          <div class="reel-avatar-placeholder">{{ reel.author.username|first|upper }}</div>
           {% endif %}
-          <div class="reel-progress-bar"><div class="reel-progress-fill"></div></div>
-          <button class="reel-mute-toggle" type="button" aria-label="Toggle mute">🔇</button>
-          {% if reel.id in guide_reel_ids %}
-          <span class="reel-guide-badge">Guide Available</span>
-          {% endif %}
-        </div>
+        </a>
+        <a href="{% url 'profile' reel.author.username %}"
+           class="reel-username" style="text-decoration:none;color:#fff;">
+          @{{ reel.author.username }}
+        </a>
+        {% if user.is_authenticated and user != reel.author %}
+        <button class="reel-follow-btn"
+                data-follow="{{ reel.author.username }}">+ Follow</button>
+        {% endif %}
+      </div>
 
-        <div class="reel-overlay">
-          <div class="reel-meta">
-            <a href="{% url 'profile' reel.author.username %}" class="reel-author">
-              <span class="avatar-sm">
-                {% if reel.author.profile.avatar %}
-                  <img src="{{ reel.author.profile.avatar.url }}" alt="{{ reel.author.username }}">
-                {% else %}
-                  <span>👤</span>
-                {% endif %}
-              </span>
-              <div>
-                <strong>@{{ reel.author.username }}</strong>
-                <small>{{ reel.location|default:'Unknown location' }}</small>
-              </div>
-            </a>
-            <div class="reel-actions-column">
-              <button type="button" class="reel-action-circle" data-like-reel="{{ reel.id }}" aria-label="Like reel">❤️</button>
-              <button type="button" class="reel-action-circle" data-share="{{ request.build_absolute_uri }}" aria-label="Share reel">↗️</button>
-              <button type="button" class="reel-action-circle" aria-label="Download reel">⬇️</button>
-            </div>
-          </div>
+      {% if reel.location %}
+      <div class="reel-location">📍 {{ reel.location }}</div>
+      {% endif %}
 
-          <div class="reel-info-bottom">
-            {% if reel.caption %}
-            <div class="reel-caption">{{ reel.caption }}</div>
-            {% endif %}
-            <div class="reel-tags">
-              <span>#travel</span>
-              <span>#explore</span>
-              <span>#{{ reel.location|slugify }}</span>
-            </div>
-          </div>
-        </div>
-      </article>
-      {% empty %}
-      <article class="reel-fullscreen-card">
-        <div class="reel-media">
-          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80" alt="No reels yet">
-        </div>
-        <div class="reel-overlay">
-          <div class="reel-info-bottom">
-            <h3>No reels yet</h3>
-            <p>Upload your first travel story to reach the community.</p>
-            <a href="{% url 'create_reel' %}" class="btn btn-primary">Upload Reel</a>
-          </div>
-        </div>
-      </article>
-      {% endfor %}
+      {% if reel.caption %}
+      <div class="reel-caption">{{ reel.caption }}</div>
+      {% endif %}
+
+      <div class="reel-audio">🎵 Original Audio · {{ reel.author.username }}</div>
     </div>
+
+    <!-- Right action buttons -->
+    <div class="reel-actions">
+      <!-- Like -->
+      <div class="reel-action">
+        <button class="reel-action-btn {% if reel.id in liked_reels %}liked{% endif %}"
+                data-like-reel="{{ reel.id }}" id="like-btn-{{ reel.id }}"
+                aria-label="Like">
+          {% if reel.id in liked_reels %}❤️{% else %}🤍{% endif %}
+        </button>
+        <span class="reel-action-label" id="like-count-{{ reel.id }}">{{ reel.like_count }}</span>
+      </div>
+
+      <!-- Comment -->
+      <div class="reel-action">
+        <button class="reel-action-btn" aria-label="Comment">💬</button>
+        <span class="reel-action-label">{{ reel.comment_count }}</span>
+      </div>
+
+      <!-- Share -->
+      <div class="reel-action">
+        <button class="reel-action-btn"
+                data-share="{{ request.build_absolute_uri }}"
+                aria-label="Share">↗️</button>
+        <span class="reel-action-label">Share</span>
+      </div>
+
+      <!-- Download / Save -->
+      <div class="reel-action">
+        {% if reel.thumbnail_url %}
+        <a href="{{ reel.thumbnail_url }}" download
+           class="reel-action-btn" aria-label="Save">⬇️</a>
+        {% else %}
+        <button class="reel-action-btn" aria-label="Save">⬇️</button>
+        {% endif %}
+        <span class="reel-action-label">Save</span>
+      </div>
+
+      <!-- Guide link -->
+      {% if reel.location %}
+      <div class="reel-action">
+        <a href="{% url 'guides' %}?city={{ reel.location|urlencode }}"
+           class="reel-action-btn" aria-label="Find Guide">🧭</a>
+        <span class="reel-action-label">Guide</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Progress bar -->
+    <div class="reel-progress">
+      <div class="reel-progress-fill" id="progress-{{ reel.id }}"></div>
+    </div>
+
+  </div>
+  {% empty %}
+  <!-- Empty state -->
+  <div class="reel-card" style="background: linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
+    <div class="reel-gradient"></div>
+    <div class="reel-info" style="bottom:50%; transform:translateY(50%); left:50%; transform:translate(-50%,50%); text-align:center; max-width:300px;">
+      <div style="font-size:72px; margin-bottom:20px;">🎬</div>
+      <h2 style="font-size:24px; font-weight:800; color:#fff; margin-bottom:12px;">No Reels Yet</h2>
+      <p style="color:rgba(255,255,255,0.7); margin-bottom:24px;">
+        Upload your first travel story and inspire the community.
+      </p>
+      <a href="{% url 'create_reel' %}"
+         style="background:linear-gradient(135deg,#2B6CB0,#38B2AC); color:#fff;
+                padding:12px 28px; border-radius:30px; font-weight:700;
+                text-decoration:none; display:inline-block;">
+        Upload Your Reel
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Swipe hint -->
+{% if reels %}
+<div id="swipe-hint">
+  <span>↑ Swipe up for next reel</span>
+</div>
+{% endif %}
+
+<!-- Toast container -->
+<div id="tv-toast-container" class="tv-toast-container" style="position:fixed;top:70px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+
+<script>
+window.CSRF_TOKEN = '{{ csrf_token }}';
+window.USER_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
+
+(function() {
+  // ── Toast helper ───────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('tv-toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.style.cssText = `background:${type==='success'?'#38B2AC':'#2B6CB0'};color:#fff;
+      padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;
+      box-shadow:0 4px 16px rgba(0,0,0,0.3);animation:fadeIn .2s ease;`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+  }
+
+  // ── CSRF helper ────────────────────────────────────
+  function getCsrf() {
+    return window.CSRF_TOKEN || document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
+  }
+
+  // ── Reel like ──────────────────────────────────────
+  document.querySelectorAll('[data-like-reel]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!window.USER_AUTHENTICATED) { window.location = '{% url "login" %}'; return; }
+      const id = btn.dataset.likeReel;
+      try {
+        const res = await fetch(`/api/reel/like/${id}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+          btn.textContent = data.liked ? '❤️' : '🤍';
+          btn.classList.toggle('liked', data.liked);
+          const countEl = document.getElementById(`like-count-${id}`);
+          if (countEl) countEl.textContent = data.count;
+          showToast(data.liked ? '❤️ Reel liked!' : 'Like removed', 'success');
+        }
+      } catch(e) { console.error(e); }
+    });
+  });
+
+  // ── Follow button ──────────────────────────────────
+  document.querySelectorAll('[data-follow]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!window.USER_AUTHENTICATED) { window.location = '{% url "login" %}'; return; }
+      const username = btn.dataset.follow;
+      try {
+        const res = await fetch(`/api/follow/${username}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrf(), 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+          btn.textContent = data.following ? '✓ Following' : '+ Follow';
+          showToast(data.following ? `Following @${username}!` : `Unfollowed @${username}`, 'success');
+        }
+      } catch(e) { console.error(e); }
+    });
+  });
+
+  // ── Share button ───────────────────────────────────
+  document.querySelectorAll('[data-share]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.share || window.location.href;
+      if (navigator.share) {
+        try { await navigator.share({ title: 'TravelVerse Reel', url }); } catch(e) {}
+      } else {
+        try { await navigator.clipboard.writeText(url); showToast('Link copied!', 'success'); } catch(e) {}
+      }
+    });
+  });
+
+  // ── Progress bar animation per visible reel ───────
+  const feed = document.getElementById('reels-feed');
+  let progressTimer = null;
+
+  function startProgress(card) {
+    const fill = card.querySelector('.reel-progress-fill');
+    if (!fill) return;
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    void fill.offsetWidth;
+    fill.style.transition = 'width 8s linear';
+    fill.style.width = '100%';
+  }
+  function stopProgress(card) {
+    const fill = card.querySelector('.reel-progress-fill');
+    if (fill) { fill.style.transition = 'none'; fill.style.width = '0%'; }
+  }
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.8) {
+        startProgress(entry.target);
+        // autoplay video if present
+        const vid = entry.target.querySelector('video');
+        if (vid) vid.play().catch(() => {});
+      } else {
+        stopProgress(entry.target);
+        const vid = entry.target.querySelector('video');
+        if (vid) { vid.pause(); vid.currentTime = 0; }
+      }
+    });
+  }, { threshold: 0.8 });
+
+  document.querySelectorAll('.reel-card').forEach(card => io.observe(card));
+
+  // Start first card immediately
+  const firstCard = document.querySelector('.reel-card');
+  if (firstCard) startProgress(firstCard);
+
+  // ── Hide swipe hint on first scroll ───────────────
+  const hint = document.getElementById('swipe-hint');
+  if (hint && feed) {
+    feed.addEventListener('scroll', () => {
+      hint.style.opacity = '0';
+      setTimeout(() => hint.remove(), 500);
+    }, { once: true });
+  }
+})();
+</script>
+</body>
+</html>
 {% endblock %}

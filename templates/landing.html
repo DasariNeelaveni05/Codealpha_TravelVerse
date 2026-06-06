@@ -1,182 +1,766 @@
-{% extends 'base.html' %}
-{% block title %}TravelVerse — Discover Hidden Gems{% endblock %}
-{% block body_class %}landing-page{% endblock %}
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+/* ── Global Landing Page ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+
+.lp-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.lp-section {
+  padding: 80px 0;
+}
+.lp-bg-light {
+  background: #F0F6FF;
+}
+.lp-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #38B2AC;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+.lp-heading {
+  font-size: clamp(26px, 4vw, 42px);
+  font-weight: 900;
+  color: #1A202C;
+  margin: 0 0 48px 0;
+  line-height: 1.2;
+}
+
+/* ── Hero ── */
+.lp-hero {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0a1628;
+}
+.lp-slides { position: absolute; inset: 0; z-index: 0; }
+.lp-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0;
+  transition: opacity 1.8s ease-in-out;
+}
+.lp-slide.active { opacity: 1; }
+.s1{background-image:url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80');}
+.s2{background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80');}
+.s3{background-image:url('https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1920&q=80');}
+.s4{background-image:url('https://images.unsplash.com/photo-1537519646099-335112f03225?w=1920&q=80');}
+.s5{background-image:url('https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=1920&q=80');}
+.lp-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(155deg,rgba(0,0,0,.55) 0%,rgba(0,15,35,.4) 50%,rgba(0,0,0,.65) 100%);
+}
+.lp-hero-body {
+  position: relative; z-index: 2;
+  text-align: center; color: #fff;
+  padding: 0 24px; max-width: 820px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+}
+.lp-badge {
+  background: rgba(255,255,255,.14);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.25);
+  padding: 8px 22px; border-radius: 30px;
+  font-size: 13px; font-weight: 600;
+}
+.lp-h1 {
+  font-size: clamp(34px, 6vw, 66px);
+  font-weight: 900; line-height: 1.12; margin: 0;
+  text-shadow: 0 2px 24px rgba(0,0,0,.3);
+}
+.lp-typed {
+  background: linear-gradient(135deg, #63E6BE, #63B3ED, #B794F4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.lp-cursor {
+  color: #38B2AC;
+  -webkit-text-fill-color: #38B2AC;
+  animation: lpBlink 1s infinite;
+  font-weight: 300;
+}
+@keyframes lpBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+.lp-sub {
+  font-size: clamp(14px, 2vw, 18px);
+  opacity: .88; line-height: 1.65; margin: 0;
+}
+.lp-btns {
+  display: flex; gap: 16px;
+  justify-content: center; flex-wrap: wrap;
+}
+.lp-btn-primary {
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  color: #fff; padding: 15px 36px;
+  border-radius: 50px; font-weight: 700; font-size: 15px;
+  text-decoration: none;
+  box-shadow: 0 6px 28px rgba(43,108,176,.45);
+  transition: all .25s ease;
+}
+.lp-btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(43,108,176,.55);
+  color: #fff; text-decoration: none;
+}
+.lp-btn-outline {
+  background: rgba(255,255,255,.12);
+  color: #fff; padding: 15px 36px;
+  border-radius: 50px; font-weight: 600; font-size: 15px;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,.45);
+  backdrop-filter: blur(8px);
+  transition: all .25s ease;
+}
+.lp-btn-outline:hover {
+  background: rgba(255,255,255,.22);
+  transform: translateY(-3px);
+  color: #fff; text-decoration: none;
+}
+.lp-stats-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(255,255,255,.15);
+  padding: 18px 40px;
+}
+.lp-stat {
+  text-align: center; padding: 0 36px; color: #fff;
+}
+.lp-stat strong {
+  display: block; font-size: 26px; font-weight: 800;
+  background: linear-gradient(135deg, #63B3ED, #38B2AC);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.lp-stat span { font-size: 12px; opacity: .75; font-weight: 500; }
+.lp-sep { width: 1px; height: 38px; background: rgba(255,255,255,.2); }
+
+/* ── Feature Cards ── */
+.lp-cards-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+@media(max-width:900px){ .lp-cards-4{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:560px){ .lp-cards-4{grid-template-columns:1fr;} }
+.lp-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  box-shadow: 0 4px 20px rgba(66,153,225,.08);
+  transition: transform .25s, box-shadow .25s;
+}
+.lp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(43,108,176,.14);
+}
+.lp-card-icon { font-size: 36px; margin-bottom: 16px; }
+.lp-card h3 {
+  font-size: 17px; font-weight: 700;
+  color: #1A202C; margin: 0 0 10px;
+}
+.lp-card p {
+  font-size: 14px; color: #718096; line-height: 1.6; margin: 0;
+}
+
+/* ── Trending Destinations ── */
+.lp-dest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media(max-width:768px){ .lp-dest-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:480px){ .lp-dest-grid{grid-template-columns:1fr;} }
+.lp-dest-card {
+  border-radius: 16px; overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(66,153,225,.08);
+  transition: transform .25s, box-shadow .25s;
+  text-decoration: none; color: inherit;
+}
+.lp-dest-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(43,108,176,.16);
+}
+.lp-dest-img {
+  height: 200px; background-size: cover;
+  background-position: center; position: relative;
+}
+.lp-dest-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
+  display: flex; align-items: flex-end; padding: 12px;
+}
+.lp-gem-score {
+  background: rgba(0,0,0,.5);
+  color: #fff; padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  backdrop-filter: blur(6px);
+}
+.lp-dest-info { padding: 14px 16px; }
+.lp-dest-name { font-weight: 700; font-size: 14px; color: #1A202C; }
+.lp-dest-meta { font-size: 12px; color: #718096; margin-top: 4px; }
+
+/* ── Leaderboard ── */
+.lp-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media(max-width:768px){ .lp-leaders-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:480px){ .lp-leaders-grid{grid-template-columns:1fr;} }
+.lp-leader-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(66,153,225,.08);
+  position: relative;
+  transition: transform .25s, box-shadow .25s;
+  text-decoration: none; color: inherit;
+  display: block;
+}
+.lp-leader-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(43,108,176,.14);
+}
+.lp-leader-rank {
+  position: absolute; top: 20px; right: 24px;
+  font-size: 32px; font-weight: 900; color: #38B2AC;
+  line-height: 1;
+}
+.lp-leader-label {
+  font-size: 12px; color: #A0AEC0;
+  font-weight: 500; margin-bottom: 6px;
+}
+.lp-leader-username {
+  font-size: 18px; font-weight: 800;
+  color: #1A202C; margin-bottom: 8px;
+}
+.lp-leader-score {
+  font-size: 14px; color: #718096;
+}
+
+/* ── Categories ── */
+.lp-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+@media(max-width:1024px){ .lp-cat-grid{grid-template-columns:repeat(3,1fr);} }
+@media(max-width:600px)  { .lp-cat-grid{grid-template-columns:repeat(2,1fr);} }
+.lp-cat-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(66,153,225,.08);
+  transition: transform .25s, box-shadow .25s;
+  text-decoration: none; color: inherit;
+  display: block;
+}
+.lp-cat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(43,108,176,.14);
+}
+.lp-cat-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+.lp-cat-name {
+  font-size: 16px; font-weight: 700;
+  color: #1A202C; margin-bottom: 8px;
+}
+.lp-cat-desc { font-size: 13px; color: #718096; line-height: 1.5; }
+
+/* ── Footer ── */
+.lp-footer {
+  background: #1A202C;
+  color: #CBD5E0;
+  padding: 64px 0 0;
+}
+.lp-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;
+  gap: 40px;
+  padding-bottom: 48px;
+}
+@media(max-width:1024px){
+  .lp-footer-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:600px){
+  .lp-footer-grid{grid-template-columns:1fr;}
+}
+.lp-footer-logo {
+  font-size: 22px; font-weight: 800;
+  color: #fff; margin-bottom: 14px;
+}
+.lp-footer-brand p {
+  font-size: 14px; line-height: 1.7;
+  opacity: .7; margin-bottom: 20px;
+}
+.lp-socials { display: flex; gap: 10px; }
+.lp-social-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; text-decoration: none;
+  transition: background .2s;
+}
+.lp-social-icon:hover { background: rgba(255,255,255,.18); }
+.lp-footer-col-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; color: #fff;
+  margin-bottom: 18px; text-transform: uppercase;
+}
+.lp-footer-col a {
+  display: block; color: #A0AEC0;
+  text-decoration: none; font-size: 14px;
+  margin-bottom: 10px; transition: color .2s;
+}
+.lp-footer-col a:hover { color: #38B2AC; }
+.lp-app-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: #2D3748; color: #fff;
+  padding: 12px 16px; border-radius: 10px;
+  text-decoration: none; transition: background .2s;
+}
+.lp-app-btn:hover { background: #4A5568; }
+.lp-app-btn small { font-size: 10px; opacity: .7; }
+.lp-app-btn strong { font-size: 14px; display: block; }
+.lp-footer-bottom {
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  opacity: .6;
+}
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media(max-width:600px){
+  .lp-stats-bar{ padding: 14px 16px; }
+  .lp-stat     { padding: 0 14px; }
+  .lp-sep      { display: none; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="landing-hero">
-  <div class="hero-bg" data-hero-slides='[
-    "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",
-    "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1600&q=80",
-    "https://images.unsplash.com/photo-1505577058444-a3dab1b5f3d6?auto=format&fit=crop&w=1600&q=80",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80"
-  ]' data-video-sources='[
-    "/static/videos/waterfall-1.mp4",
-    "/static/videos/waterfall-2.mp4",
-    "/static/videos/waterfall-3.mp4",
-    "/static/videos/waterfall-4.mp4"
-  ]'>
-    <!-- Place waterfall MP4s at static/videos/waterfall-1.mp4 .. waterfall-4.mp4 (Pexels/Mixkit/Coverr recommended) -->
-    <video id="hero-video" class="hero-video" autoplay muted loop playsinline preload="auto" poster="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80">
-      <source src="/static/videos/waterfall-1.mp4" type="video/mp4">
-    </video>
+<!-- ═══ HERO ═══════════════════════════════════════ -->
+<section class="lp-hero">
+  <div class="lp-slides">
+    <div class="lp-slide s1 active"></div>
+    <div class="lp-slide s2"></div>
+    <div class="lp-slide s3"></div>
+    <div class="lp-slide s4"></div>
+    <div class="lp-slide s5"></div>
   </div>
-  <div class="hero-particles">
-    <span style="--x:12%; --y:30%; --d:10s;"></span>
-    <span style="--x:22%; --y:76%; --d:14s;"></span>
-    <span style="--x:34%; --y:18%; --d:12s;"></span>
-    <span style="--x:48%; --y:52%; --d:17s;"></span>
-    <span style="--x:64%; --y:28%; --d:13s;"></span>
-    <span style="--x:78%; --y:66%; --d:18s;"></span>
-    <span style="--x:86%; --y:12%; --d:11s;"></span>
-    <span style="--x:7%; --y:58%; --d:15s;"></span>
-    <span style="--x:52%; --y:84%; --d:16s;"></span>
+  <div class="lp-overlay"></div>
+  <div class="lp-hero-body">
+    <div class="lp-badge">✈️ &nbsp;Travel storytelling for explorers</div>
+    <h1 class="lp-h1">
+      Open the next chapter of<br>
+      <span class="lp-typed" id="lp-typewriter">your adventure</span>
+      <span class="lp-cursor">|</span>
+    </h1>
+    <p class="lp-sub">
+      Share hidden destinations, connect with local guides,<br>
+      build your passport, and feel the wanderlust before you even leave.
+    </p>
+    <div class="lp-btns">
+      <a href="{% url 'register' %}" class="lp-btn-primary">
+        Start Exploring →
+      </a>
+      <a href="{% url 'feed' %}" class="lp-btn-outline">
+        Explore the Feed
+      </a>
+    </div>
   </div>
-
-  <div class="hero-content">
-    <span class="hero-badge">✨ Travel storytelling for explorers</span>
-    <h1>Open the next chapter of your adventure.</h1>
-    <div class="hero-line">
-      <span class="hero-typed"></span>
-      <span class="cursor"></span>
+  <div class="lp-stats-bar">
+    <div class="lp-stat">
+      <strong class="lp-count" data-target="50000">0+</strong>
+      <span>Explorers</span>
     </div>
-    <p>Share your journeys, connect with local guides, build your passport, and feel the wanderlust before you even leave.</p>
-
-    <div class="hero-actions">
-      <a href="{% url 'register' %}" class="btn btn-primary btn-hero">Start Exploring →</a>
-      <a href="{% url 'feed' %}" class="btn btn-outline btn-hero">Explore the Feed</a>
+    <div class="lp-sep"></div>
+    <div class="lp-stat">
+      <strong class="lp-count" data-target="8000">0+</strong>
+      <span>Hidden Gems</span>
     </div>
-
-    <div class="hero-stat-grid">
-      <div class="hero-stat"><strong>320+</strong><span>Hidden gems shared</span></div>
-      <div class="hero-stat"><strong>1.8K</strong><span>Explorer stories</span></div>
-      <div class="hero-stat"><strong>24</strong><span>World regions covered</span></div>
+    <div class="lp-sep"></div>
+    <div class="lp-stat">
+      <strong class="lp-count" data-target="120">0+</strong>
+      <span>Countries</span>
     </div>
+    <div class="lp-sep"></div>
+    <div class="lp-stat">
+      <strong class="lp-count" data-target="99">0+</strong>
+      <span>% Loved It</span>
+    </div>
+  </div>
+</section>
 
-    <div class="hero-marquee" role="region" aria-label="Live from the community">
-      <div class="marquee-track">
-        {% for post in highlights %}
-        <article class="marquee-card" data-share-url="{% url 'post_detail' post.pk %}">
-          {% with img=post.images.first %}
-          {% if img %}
-            <img src="{{ img.image.url }}" alt="{{ post.location }}">
-          {% else %}
-            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="Community post">
-          {% endif %}
-          {% endwith %}
-          <div class="meta">
-            <strong>{{ post.location }}</strong>
-            <small>by @{{ post.author.username }}</small>
+<!-- ═══ FEATURES ════════════════════════════════════ -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-label">WHY TRAVELVERSE</div>
+    <h2 class="lp-heading">A travel documentary for every explorer.</h2>
+    <div class="lp-cards-4">
+      <div class="lp-card reveal">
+        <div class="lp-card-icon">💎</div>
+        <h3>Hidden Gem Discovery</h3>
+        <p>Find off-grid destinations, boutique hideaways, and 
+        user-voted secret spots across the world.</p>
+      </div>
+      <div class="lp-card reveal">
+        <div class="lp-card-icon">🛂</div>
+        <h3>Passport & Badges</h3>
+        <p>Collect passport stamps, unlock explorer badges, and 
+        watch your travel story come alive.</p>
+      </div>
+      <div class="lp-card reveal">
+        <div class="lp-card-icon">🎬</div>
+        <h3>Reels & Stories</h3>
+        <p>Share vertical travel moments, see immersive reels, 
+        and feel each destination like a mini film.</p>
+      </div>
+      <div class="lp-card reveal">
+        <div class="lp-card-icon">🧭</div>
+        <h3>Local Guide Connect</h3>
+        <p>Discover local experts, message guides directly, 
+        and plan a first-time travel experience with confidence.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRENDING DESTINATIONS ═══════════════════════ -->
+<section class="lp-section lp-bg-light">
+  <div class="lp-container">
+    <div class="lp-label">TRENDING DESTINATIONS</div>
+    <h2 class="lp-heading">
+      Most loved hidden gems from the community.
+    </h2>
+    <div class="lp-dest-grid">
+      {% for post in trending_posts %}
+      <a href="{% url 'post_detail' post.id %}" 
+         class="lp-dest-card reveal">
+        <div class="lp-dest-img"
+             style="background-image:url('{{ post.get_image }}')">
+          <div class="lp-dest-overlay">
+            <span class="lp-gem-score">💎 {{ post.gem_score }}</span>
           </div>
-        </article>
-        {% endfor %}
-        {% for post in highlights %}
-        <article class="marquee-card" aria-hidden="true">
-          {% with img=post.images.first %}
-          {% if img %}<img src="{{ img.image.url }}" alt="">{% else %}<img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="">{% endif %}
-          {% endwith %}
-          <div class="meta"><strong>{{ post.location }}</strong><small>by @{{ post.author.username }}</small></div>
-        </article>
-        {% endfor %}
+        </div>
+        <div class="lp-dest-info">
+          <div class="lp-dest-name">{{ post.location }}</div>
+          <div class="lp-dest-meta">
+            ❤️ {{ post.like_count }} · 
+            {{ post.category|capfirst }}
+          </div>
+        </div>
+      </a>
+      {% empty %}
+      <!-- Placeholder cards when no posts exist -->
+      {% for item in placeholder_destinations %}
+      <div class="lp-dest-card reveal">
+        <div class="lp-dest-img"
+             style="background-image:url('{{ item.img }}')">
+          <div class="lp-dest-overlay">
+            <span class="lp-gem-score">💎 {{ item.score }}</span>
+          </div>
+        </div>
+        <div class="lp-dest-info">
+          <div class="lp-dest-name">{{ item.name }}</div>
+          <div class="lp-dest-meta">{{ item.meta }}</div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div class="hero-preview-grid">
-    {% for post in trending %}
-    <a href="{% url 'post_detail' post.pk %}" class="hero-card">
-      {% with img=post.images.first %}
-      {% if img %}
-        <img src="{{ img.image.url }}" alt="{{ post.location }}">
-      {% else %}
-        <div class="ph">🌅</div>
-      {% endif %}
-      {% endwith %}
-      <span>📍 {{ post.location }}</span>
-    </a>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="landing-section animate-on-scroll">
-  <div class="section-header">
-    <span class="section-tag">Why TravelVerse?</span>
-    <h2 class="section-title">A travel documentary for every explorer.</h2>
-  </div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <h3>Hidden Gem Discovery</h3>
-      <p>Find off-grid destinations, boutique hideaways, and user-voted secret spots across the world.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Passport & Badges</h3>
-      <p>Collect passport stamps, unlock explorer badges, and watch your travel story come alive.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Reels & Stories</h3>
-      <p>Share vertical travel moments, see immersive reels, and feel each destination like a mini film.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Local Guide Connect</h3>
-      <p>Discover local experts, message guides directly, and plan a first-time travel experience with confidence.</p>
+      {% endfor %}
+      {% endfor %}
     </div>
   </div>
 </section>
 
-<section class="landing-section animate-on-scroll">
-  <div class="section-header">
-    <span class="section-tag">Trending Destinations</span>
-    <h2 class="section-title">Most loved hidden gems from the community.</h2>
-  </div>
-  <div class="destination-grid">
-    {% for post in trending %}
-    <article class="destination-card">
-      {% with img=post.images.first %}
-      {% if img %}
-      <img src="{{ img.image.url }}" alt="{{ post.location }}">
-      {% else %}
-      <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80" alt="{{ post.location }}">
-      {% endif %}
-      {% endwith %}
-      <div class="destination-copy">
-        <h3>{{ post.location }}</h3>
-        <p>{{ post.hidden_gem_description|default:'A secret escape waiting to be discovered.'|truncatechars:100 }}</p>
+<!-- ═══ EXPLORER LEADERBOARD ════════════════════════ -->
+<section class="lp-section">
+  <div class="lp-container">
+    <div class="lp-label">EXPLORER LEADERBOARD</div>
+    <h2 class="lp-heading">
+      Meet the community's top adventurers.
+    </h2>
+    <div class="lp-leaders-grid">
+      {% for profile in top_explorers %}
+      <a href="{% url 'profile' profile.user.username %}"
+         class="lp-leader-card reveal">
+        <div class="lp-leader-rank">{{ forloop.counter }}</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">
+          @{{ profile.user.username }}
+        </div>
+        <div class="lp-leader-score">
+          {{ profile.explorer_score }} points
+        </div>
+      </a>
+      {% empty %}
+      <!-- Placeholder leaderboard -->
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">1</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@elise_travels</div>
+        <div class="lp-leader-score">11000 points</div>
       </div>
-    </article>
-    {% endfor %}
-  </div>
-</section>
-
-<section class="landing-section animate-on-scroll">
-  <div class="section-header">
-    <span class="section-tag">Explorer Leaderboard</span>
-    <h2 class="section-title">Meet the community's top adventurers.</h2>
-  </div>
-  <div class="leaderboard-grid">
-    {% for p in top_explorers %}
-    <article class="leaderboard-card">
-      <div>
-        <small>Explorer</small>
-        <h3>@{{ p.user.username }}</h3>
-        <p>{{ p.explorer_score }} points</p>
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">2</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@leo_captures</div>
+        <div class="lp-leader-score">8900 points</div>
       </div>
-      <div class="leader-rank">{{ forloop.counter }}</div>
-    </article>
-    {% endfor %}
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">3</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@zara_roams</div>
+        <div class="lp-leader-score">5500 points</div>
+      </div>
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">4</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@trek_priya</div>
+        <div class="lp-leader-score">3200 points</div>
+      </div>
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">5</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@maya_wanders</div>
+        <div class="lp-leader-score">94 points</div>
+      </div>
+      <div class="lp-leader-card reveal">
+        <div class="lp-leader-rank">6</div>
+        <div class="lp-leader-label">Explorer</div>
+        <div class="lp-leader-username">@nomad_rahul</div>
+        <div class="lp-leader-score">70 points</div>
+      </div>
+      {% endfor %}
+    </div>
   </div>
 </section>
 
-<section class="landing-section animate-on-scroll">
-  <div class="section-header">
-    <span class="section-tag">Travel Categories</span>
-    <h2 class="section-title">Discover new ways to explore.</h2>
-  </div>
-  <div class="category-grid">
-    <a href="{% url 'search' %}?category=beach" class="category-card"><span>🏖️</span><h3>Beaches</h3><small>Sunset coastlines and island escapes</small></a>
-    <a href="{% url 'search' %}?category=mountain" class="category-card"><span>🏔️</span><h3>Mountains</h3><small>High trails and alpine hideaways</small></a>
-    <a href="{% url 'search' %}?category=adventure" class="category-card"><span>🧗</span><h3>Adventure</h3><small>Thrilling treks and epic journeys</small></a>
-    <a href="{% url 'search' %}?category=food" class="category-card"><span>🍜</span><h3>Food</h3><small>Local flavors and tasting trails</small></a>
-    <a href="{% url 'search' %}?category=cultural" class="category-card"><span>🏛️</span><h3>Culture</h3><small>Heritage sites and hidden rituals</small></a>
-    <a href="{% url 'search' %}?category=island" class="category-card"><span>🌴</span><h3>Islands</h3><small>Turquoise lagoons and secret beaches</small></a>
+<!-- ═══ TRAVEL CATEGORIES ════════════════════════════ -->
+<section class="lp-section lp-bg-light">
+  <div class="lp-container">
+    <div class="lp-label">TRAVEL CATEGORIES</div>
+    <h2 class="lp-heading">Discover new ways to explore.</h2>
+    <div class="lp-cat-grid">
+      <a href="{% url 'feed' %}?category=beach" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">🏖️</div>
+        <div class="lp-cat-name">Beaches</div>
+        <div class="lp-cat-desc">Sunset coastlines and island escapes</div>
+      </a>
+      <a href="{% url 'feed' %}?category=mountain" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">⛰️</div>
+        <div class="lp-cat-name">Mountains</div>
+        <div class="lp-cat-desc">High trails and alpine hideaways</div>
+      </a>
+      <a href="{% url 'feed' %}?category=adventure" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">🧗</div>
+        <div class="lp-cat-name">Adventure</div>
+        <div class="lp-cat-desc">Thrilling treks and epic journeys</div>
+      </a>
+      <a href="{% url 'feed' %}?category=food" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">🍜</div>
+        <div class="lp-cat-name">Food</div>
+        <div class="lp-cat-desc">Local flavors and tasting trails</div>
+      </a>
+      <a href="{% url 'feed' %}?category=historical" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">🏛️</div>
+        <div class="lp-cat-name">Culture</div>
+        <div class="lp-cat-desc">Heritage sites and hidden rituals</div>
+      </a>
+      <a href="{% url 'feed' %}?category=island" class="lp-cat-card reveal">
+        <div class="lp-cat-icon">🌴</div>
+        <div class="lp-cat-name">Islands</div>
+        <div class="lp-cat-desc">Turquoise lagoons and secret beaches</div>
+      </a>
+    </div>
   </div>
 </section>
+
+<!-- ═══ FOOTER ══════════════════════════════════════ -->
+<footer class="lp-footer">
+  <div class="lp-container">
+    <div class="lp-footer-grid">
+      
+      <!-- Brand column -->
+      <div class="lp-footer-brand">
+        <div class="lp-footer-logo">🌍 TravelVerse</div>
+        <p>A premium social network for travelers to discover, 
+        share, and track hidden gems around the globe. Pin your 
+        journeys, collect stamps, and climb the explorer 
+        leaderboard.</p>
+        <div class="lp-socials">
+          <a href="#" class="lp-social-icon">📘</a>
+          <a href="#" class="lp-social-icon">📸</a>
+          <a href="#" class="lp-social-icon">🐦</a>
+          <a href="#" class="lp-social-icon">▶️</a>
+          <a href="#" class="lp-social-icon">💼</a>
+        </div>
+      </div>
+
+      <!-- Explore -->
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-title">EXPLORE</div>
+        <a href="#">Hidden Gems</a>
+        <a href="{% url 'reels' %}">Travel Reels</a>
+        <a href="#">Travelogues</a>
+        <a href="#">Travel Companions</a>
+        <a href="#">Explorer Rankings</a>
+      </div>
+
+      <!-- Guides -->
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-title">GUIDES</div>
+        <a href="#">Europe Guides</a>
+        <a href="#">Asia Destinations</a>
+        <a href="#">Tropical Escapes</a>
+        <a href="#">Budget Planning</a>
+        <a href="#">Solo Travel Tips</a>
+      </div>
+
+      <!-- Community -->
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-title">COMMUNITY</div>
+        <a href="#">Active Challenges</a>
+        <a href="#">Featured Travelers</a>
+        <a href="#">XP Rewards System</a>
+        <a href="#">Safety Guidelines</a>
+        <a href="#">Community Forum</a>
+      </div>
+
+      <!-- Company -->
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-title">COMPANY</div>
+        <a href="#">About Us</a>
+        <a href="#">Careers</a>
+        <a href="#">Press Room</a>
+        <a href="#">Contact Support</a>
+        <a href="#">Help Center</a>
+      </div>
+
+      <!-- App download -->
+      <div class="lp-footer-col">
+        <div class="lp-footer-col-title">GET THE APP</div>
+        <p style="font-size:13px;opacity:.7;margin-bottom:12px;">
+          Download the TravelVerse mobile application:
+        </p>
+        <a href="#" class="lp-app-btn">
+          <span style="font-size:20px;">🍎</span>
+          <span><small>Get it on</small><br><strong>App Store</strong></span>
+        </a>
+        <a href="#" class="lp-app-btn" style="margin-top:10px;">
+          <span style="font-size:20px;">▶</span>
+          <span><small>Get it on</small><br><strong>Google Play</strong></span>
+        </a>
+      </div>
+
+    </div>
+    <div class="lp-footer-bottom">
+      <span>© 2025 TravelVerse. All rights reserved.</span>
+      <span style="opacity:.5;">"Not all those who wander are lost." — Tolkien</span>
+    </div>
+  </div>
+</footer>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_js %}
+<script>
+// Slideshow
+(function(){
+  var slides=document.querySelectorAll('.lp-slide');
+  if(!slides.length)return;
+  var i=0;
+  setInterval(function(){
+    slides[i].classList.remove('active');
+    i=(i+1)%slides.length;
+    slides[i].classList.add('active');
+  },8000);
+})();
+
+// Typewriter
+(function(){
+  var el=document.getElementById('lp-typewriter');
+  if(!el)return;
+  var w=['your adventure','hidden destinations','local guides',
+         'new horizons','travel stories','unforgettable journeys'];
+  var wi=0,ci=0,del=false;
+  function t(){
+    var cur=w[wi];
+    el.textContent=del?cur.slice(0,ci-1):cur.slice(0,ci+1);
+    del?ci--:ci++;
+    var s=del?55:95;
+    if(!del&&ci===cur.length){s=2200;del=true;}
+    else if(del&&ci===0){del=false;wi=(wi+1)%w.length;s=350;}
+    setTimeout(t,s);
+  }
+  t();
+})();
+
+// Count-up
+(function(){
+  var els=document.querySelectorAll('.lp-count');
+  var done=false;
+  function run(){
+    if(done)return;done=true;
+    els.forEach(function(el){
+      var target=parseInt(el.dataset.target)||0;
+      var s=target/(1800/16),c=0;
+      var iv=setInterval(function(){
+        c=Math.min(c+s,target);
+        el.textContent=Math.floor(c).toLocaleString()+'+';
+        if(c>=target)clearInterval(iv);
+      },16);
+    });
+  }
+  var bar=document.querySelector('.lp-stats-bar');
+  if(bar&&'IntersectionObserver'in window){
+    new IntersectionObserver(function(e){
+      if(e[0].isIntersecting)run();
+    },{threshold:.4}).observe(bar);
+  }else run();
+})();
+
+// Scroll reveal
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:.12});
+  els.forEach(function(el){io.observe(el);});
+})();
+</script>
 {% endblock %}

@@ -10,4 +10,6 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    # Django handles STATIC_URL automatically if 'django.contrib.staticfiles' is in INSTALLED_APPS,
+    # but if you have custom STATICFILES_DIRS that aren't being picked up:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

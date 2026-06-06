@@ -13,6 +13,7 @@ from social.models import (
     Follow,
     Comment,
     GuideProfile,
+    Destination,
 )
 
 class Command(BaseCommand):
@@ -309,8 +310,9 @@ class Command(BaseCommand):
             {
                 'author': 'maya_wanders',
                 'title': 'Santorini Sunrise Magic',
-                'thumbnail': 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80',
-                'caption': '60 seconds of pure Santorini magic 🌅 The silence, the light, the blue domes. Nothing compares. #Santorini #TravelReel',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&q=80',
+                'caption': '60 seconds of pure Santorini magic 🌅 The silence, the light, the blue domes. #Santorini #HiddenGem',
                 'location': 'Santorini, Greece',
                 'country': 'Greece',
                 'lat': 36.3932, 'lng': 25.4615,
@@ -318,26 +320,29 @@ class Command(BaseCommand):
             {
                 'author': 'leo_captures',
                 'title': 'Maldives Crystal Waters',
-                'thumbnail': 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&q=80',
-                'caption': 'The most surreal shade of blue I have ever seen 🌊💙 This atoll does not appear on tourist maps. #Maldives #HiddenGem',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=800&q=80',
+                'caption': 'The most surreal blue I have ever seen 🌊💙 This atoll is not on any tourist map. #Maldives',
                 'location': 'Maldives Atoll',
                 'country': 'Maldives',
                 'lat': 4.1755, 'lng': 73.5093,
             },
             {
                 'author': 'nomad_rahul',
-                'title': 'Spiti Valley Road Trip',
-                'thumbnail': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80',
-                'caption': '7 hours driving through the roof of the world 🏔️ Spiti in September hits different. #SpitiValley #RoadTrip',
-                'location': 'Spiti Valley, HP',
+                'title': 'Himalayan Road Trip',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
+                'caption': '7 hours on mountain roads at 4500m 🏔️ Spiti Valley in September. #Spiti #Himalayas',
+                'location': 'Spiti Valley, India',
                 'country': 'India',
                 'lat': 32.2461, 'lng': 78.0337,
             },
             {
                 'author': 'elise_travels',
-                'title': 'Faroe Islands Edge Walk',
-                'thumbnail': 'https://images.unsplash.com/photo-1520769945061-0a448c463865?w=600&q=80',
-                'caption': 'Hiked to the edge of the world and found this 🌊⛰️ Faroe Islands will destroy your idea of beauty. #FaroeIslands',
+                'title': 'Waterfall in the Clouds',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1520769945061-0a448c463865?w=800&q=80',
+                'caption': 'Hiked 3 hours through fog to find this 🌊⛰️ Faroe Islands. #FaroeIslands',
                 'location': 'Faroe Islands',
                 'country': 'Denmark',
                 'lat': 61.8926, 'lng': -6.9118,
@@ -345,38 +350,62 @@ class Command(BaseCommand):
             {
                 'author': 'trek_priya',
                 'title': 'Kerala Backwater Dawn',
-                'thumbnail': 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80',
-                'caption': '5am on a houseboat. Complete silence. Just birds and water 🌴 Kerala mornings are a different world. #Kerala #Backwaters',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80',
+                'caption': '5am on a houseboat. Complete silence. Just birds and still water 🌴 #Kerala',
                 'location': 'Alleppey, Kerala',
                 'country': 'India',
                 'lat': 9.4981, 'lng': 76.3388,
             },
             {
                 'author': 'zara_roams',
-                'title': 'Kyoto Torii Gates Walk',
-                'thumbnail': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80',
-                'caption': 'Walked alone through 1000 torii gates at sunrise 🌸⛩️ Japan in autumn is not real life. #Kyoto #Japan #FushimiInari',
+                'title': 'Japan Cherry Blossom Walk',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80',
+                'caption': 'Walked alone through torii gates at 5am 🌸⛩️ #Kyoto #Japan',
                 'location': 'Kyoto, Japan',
                 'country': 'Japan',
                 'lat': 35.0116, 'lng': 135.7681,
             },
             {
                 'author': 'maya_wanders',
-                'title': 'Ooty Nilgiri Toy Train',
-                'thumbnail': 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=600&q=80',
-                'caption': 'The Nilgiri Mountain Railway through morning mist 🌫️🚂 146 years old and still magical. #Ooty #ToyTrain #TamilNadu',
+                'title': 'Ooty Mist and Mountains',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=800&q=80',
+                'caption': 'Morning mist over the Nilgiris 🌫️🌿 Ooty in monsoon is pure magic. #Ooty',
                 'location': 'Ooty, Tamil Nadu',
                 'country': 'India',
                 'lat': 11.4102, 'lng': 76.6950,
             },
             {
                 'author': 'leo_captures',
-                'title': 'Lofoten Midnight Sun',
-                'thumbnail': 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&q=80',
-                'caption': 'Midnight sun over Lofoten Islands 🌅 11:30pm and still this bright. Norway in summer is unreal. #Lofoten #Norway #MidnightSun',
-                'location': 'Lofoten, Norway',
+                'title': 'Norway Midnight Sun',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=800&q=80',
+                'caption': '11:30pm and still bright as day 🌅 Norwegian midnight sun. #Lofoten #Norway',
+                'location': 'Lofoten Islands, Norway',
                 'country': 'Norway',
                 'lat': 68.1548, 'lng': 13.9996,
+            },
+            {
+                'author': 'nomad_rahul',
+                'title': 'Hampi Sunset on Boulders',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=80',
+                'caption': 'Watching the sun melt behind ancient ruins 🏛️🌅 Hampi is not real life. #Hampi',
+                'location': 'Hampi, Karnataka',
+                'country': 'India',
+                'lat': 15.3350, 'lng': 76.4600,
+            },
+            {
+                'author': 'trek_priya',
+                'title': 'Goa Secret Beach Cove',
+                'video_embed_url': '',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+                'caption': 'Found this hidden cove after a 45-min jungle walk 🌊🏖️ No tourists. #Goa #HiddenBeach',
+                'location': 'Butterfly Beach, Goa',
+                'country': 'India',
+                'lat': 14.9634, 'lng': 73.9892,
             },
         ]
 
@@ -389,7 +418,8 @@ class Command(BaseCommand):
                 author=author,
                 title=r['title'],
                 defaults={
-                    'thumbnail_url': r['thumbnail'],
+                    'video_embed_url': r.get('video_embed_url', ''),
+                    'thumbnail_url': r['thumbnail_url'],
                     'caption': r['caption'],
                     'location': r['location'],
                     'country': r.get('country', ''),
@@ -398,7 +428,138 @@ class Command(BaseCommand):
                 }
             )
             created_reels.append(reel)
-            self.stdout.write(f'  🎬 Reel: {r["title"]}')
+
+        # Food posts for category filter
+        Post.objects.get_or_create(
+            author=created_users['zara_roams'],
+            location='Bangkok Street Food, Thailand',
+            defaults={
+                'caption': 'Best Pad Thai I have ever eaten — 3am street stall, 40 baht 🍜🔥 Bangkok night markets are a food lover\'s paradise. #Bangkok #StreetFood #Thailand',
+                'country': 'Thailand',
+                'latitude': 13.7563, 'longitude': 100.5018,
+                'category': 'food',
+                'image_url': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+                'budget': '₹1,200/day',
+                'best_season': 'November–February',
+                'hidden_gem_score': 85,
+                'travel_tips': 'Chinatown (Yaowarat) for best street food. Night Bazaar opens at 6pm.',
+            }
+        )
+
+        Post.objects.get_or_create(
+            author=created_users['maya_wanders'],
+            location='Jaipur Old City, Rajasthan',
+            defaults={
+                'caption': 'Dal Baati Churma at a 200-year-old haveli restaurant 🫙✨ Rajasthani thali is not just food — it is a complete cultural experience. #Jaipur #RajasthaniFood',
+                'country': 'India',
+                'latitude': 26.9124, 'longitude': 75.7873,
+                'category': 'food',
+                'image_url': 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
+                'budget': '₹1,800/day',
+                'best_season': 'October–March',
+                'hidden_gem_score': 83,
+                'travel_tips': 'Try Lassiwala on MI Road. Pyaaz Kachori at Rawat Misthan Bhandar is legendary.',
+            }
+        )
+
+        # ── ADVENTURE POSTS ──────────────────────────────────────
+        Post.objects.get_or_create(
+            author=created_users['nomad_rahul'],
+            location='Rishikesh, Uttarakhand',
+            defaults={
+                'caption': 'Bungee jumping over a 70m waterfall gorge in Rishikesh 🪂🏞️ Heart was in my throat the whole time. Uttarakhand adventure capital of India. #Rishikesh #Adventure #BungeeJumping',
+                'country': 'India',
+                'latitude': 30.0869, 'longitude': 78.2676,
+                'category': 'adventure',
+                'image_url': 'https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=800&q=80',
+                'budget': '₹2,000/day',
+                'best_season': 'September–June',
+                'hidden_gem_score': 90,
+                'travel_tips': 'Book bungee at Jumpin Heights in advance. White water rafting on Ganges is a must.',
+            }
+        )
+
+        Post.objects.get_or_create(
+            author=created_users['leo_captures'],
+            location='Kullu Valley, Himachal Pradesh',
+            defaults={
+                'caption': 'Paragliding over the Kullu Valley at 2500m 🪂🏔️ You can see 5 mountain ranges from up here. Most underrated adventure destination in Asia. #Kullu #Paragliding #HimachalPradesh',
+                'country': 'India',
+                'latitude': 31.9592, 'longitude': 77.1089,
+                'category': 'adventure',
+                'image_url': 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=800&q=80',
+                'budget': '₹2,500/day',
+                'best_season': 'March–June',
+                'hidden_gem_score': 91,
+                'travel_tips': 'Solang Valley for snow activities. Rohtang Pass needs a permit from DC office.',
+            }
+        )
+
+        # ── HISTORICAL POSTS ─────────────────────────────────────
+        Post.objects.get_or_create(
+            author=created_users['elise_travels'],
+            location='Rome, Italy',
+            defaults={
+                'caption': 'The Colosseum at 5am before any tourists arrive 🏛️🌅 You can hear the echoes of 2000 years of history in the silence. Rome reveals herself to early risers only. #Rome #Colosseum #Italy',
+                'country': 'Italy',
+                'latitude': 41.8902, 'longitude': 12.4922,
+                'category': 'historical',
+                'image_url': 'https://images.unsplash.com/photo-1552832230-c0197dd311ea?w=800&q=80',
+                'budget': '₹10,000/day',
+                'best_season': 'March–May, Sep–Oct',
+                'hidden_gem_score': 92,
+                'travel_tips': 'Book Colosseum tickets 3 weeks early. Roman Forum is included. Visit Vatican at 8am opening.',
+            }
+        )
+
+        Post.objects.get_or_create(
+            author=created_users['zara_roams'],
+            location='Petra, Jordan',
+            defaults={
+                'caption': 'Walking through the Siq at dawn to reach the Treasury — completely alone. Petra by night with candlelight is an out-of-body experience. 🏛️🌙 #Petra #Jordan #WonderOfTheWorld',
+                'country': 'Jordan',
+                'latitude': 30.3285, 'longitude': 35.4444,
+                'category': 'historical',
+                'image_url': 'https://images.unsplash.com/photo-1579606032821-4a3a0278c994?w=800&q=80',
+                'budget': '₹8,500/day',
+                'best_season': 'March–May, Sep–Nov',
+                'hidden_gem_score': 95,
+                'travel_tips': 'Start at 6am before tour groups arrive. Petra by Night (Mon/Wed/Thu) is magical. 2 days minimum.',
+            }
+        )
+
+        # ── ISLAND POSTS ─────────────────────────────────────────
+        Post.objects.get_or_create(
+            author=created_users['maya_wanders'],
+            location='Lakshadweep Islands, India',
+            defaults={
+                'caption': 'India has its own Maldives and almost no one knows about it 🌊🏝️ Agatti Island — lagoon so clear you can see the seabed from 8 meters up. #Lakshadweep #HiddenIsland #India',
+                'country': 'India',
+                'latitude': 10.5669, 'longitude': 72.6420,
+                'category': 'island',
+                'image_url': 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80',
+                'budget': '₹8,000/day',
+                'best_season': 'October–May',
+                'hidden_gem_score': 97,
+                'travel_tips': 'Requires a permit for non-Lakshadweep residents. Fly from Kochi. Only 36 islands, 10 are inhabited.',
+            }
+        )
+
+        Post.objects.get_or_create(
+            author=created_users['trek_priya'],
+            location='Andaman Islands, India',
+            defaults={
+                'caption': 'Havelock Island beach at sunrise — water so turquoise it looks painted. Radhanagar Beach is consistently Asia top 10. And almost no one in India talks about it. 🏖️ #Andaman #Havelock #HiddenGem',
+                'country': 'India',
+                'latitude': 11.9826, 'longitude': 92.5946,
+                'category': 'island',
+                'image_url': 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=800&q=80',
+                'budget': '₹4,000/day',
+                'best_season': 'October–May',
+                'hidden_gem_score': 93,
+                'travel_tips': 'Ferry from Port Blair to Havelock takes 90 mins. Book Makruzz speed ferry. Scuba diving is world-class.',
+            }
+        )
 
         # ── DEMO GUIDES ──────────────────────────────────────────
         guides_data = [
@@ -517,15 +678,80 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'  🧭 Guide: {g["name"]} ({g["destinations"].split(",")[0]})')
 
-        # ── DEMO LIKES ──────────────────────────────────────────
-        all_users = list(created_users.values())
-        for post in created_posts:
-            likers = random.sample(all_users, random.randint(2, max(2, len(all_users))))
-            for liker in likers:
-                Like.objects.get_or_create(user=liker, post=post)
+        # ── DEMO DESTINATIONS ────────────────────────────────────
+        dest_data = [
+            {
+                'name': 'Ooty', 'city': 'Ooty', 'state': 'Tamil Nadu', 'country': 'India',
+                'lat': 11.4102, 'lng': 76.6950,
+                'description': 'Queen of Hill Stations nestled in the Nilgiri Mountains',
+                'best_time': 'October to June (avoid peak summer June-Aug)',
+                'budget': '₹1,200–₹2,500 per day', 'language_tip': 'Tamil is primary; Hindi and English widely understood',
+                'safety_tips': 'Safe destination. Avoid remote forest trails after dark.',
+                'local_food': 'Varkey, Nilgiri tea, Home-made chocolate, Ooty Varkey cookies',
+                'how_to_reach': 'Nearest airport: Coimbatore (90km). Toy train from Mettupalayam.',
+                'cover_image': 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=800'
+            },
+            {
+                'name': 'Manali', 'city': 'Manali', 'state': 'Himachal Pradesh', 'country': 'India',
+                'lat': 32.2396, 'lng': 77.1887,
+                'description': 'Gateway to Leh Ladakh, surrounded by snow-capped Himalayan peaks',
+                'best_time': 'March to June for trekking; December for snow',
+                'budget': '₹1,500–₹3,000 per day', 
+                'language_tip': 'Hindi widely spoken. Locals speak Kullu dialect.',
+                'safety_tips': 'Altitude sickness possible above 3000m. Carry medication.',
+                'local_food': 'Sidu, Aktori, Babru, Dham (festive meal), Trout fish curry',
+                'how_to_reach': 'Nearest airport: Bhuntar (50km). Bus from Delhi (14hrs).',
+                'cover_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'
+            },
+            {
+                'name': 'Hampi', 'city': 'Hampi', 'state': 'Karnataka', 'country': 'India',
+                'lat': 15.3350, 'lng': 76.4600,
+                'description': 'UNESCO World Heritage ruins of the Vijayanagara Empire',
+                'best_time': 'November to February',
+                'budget': '₹800–₹1,500 per day',
+                'language_tip': 'Kannada is local; guides speak English.',
+                'safety_tips': 'Carry water. Sun is intense. Wear covered shoes.',
+                'local_food': 'Bisi Bele Bath, Jolada Rotti, Sugarcane juice',
+                'how_to_reach': 'Nearest airport: Hubli (143km). Train to Hospet then auto.',
+                'cover_image': 'https://images.unsplash.com/photo-1590123715937-d26beb66a374?w=800'
+            }
+        ]
 
+        for d in dest_data:
+            Destination.objects.update_or_create(
+                name=d['name'],
+                defaults={
+                    'city': d['city'],
+                    'state': d['state'],
+                    'country': d['country'],
+                    'latitude': d['lat'],
+                    'longitude': d['lng'],
+                    'description': d['description'],
+                    'best_time': d['best_time'],
+                    'budget_per_day': d['budget'],
+                    'language_tip': d['language_tip'],
+                    'safety_tips': d['safety_tips'],
+                    'local_food': d['local_food'],
+                    'how_to_reach': d['how_to_reach'],
+                    'cover_image_url': d['cover_image'],
+                }
+            )
+
+        # ── DEMO LIKES ──────────────────────────────────────────
+        Like.objects.all().delete()
+        all_users = list(created_users.values())
+        all_posts = list(Post.objects.all())
+        random.seed(42)  # For reproducibility of demo likes count
+        total_likes_to_create = random.randint(50, 200)
+        all_possible_likes = [(u, p) for u in all_users for p in all_posts]
+        random.shuffle(all_possible_likes)
+        to_create = all_possible_likes[:total_likes_to_create]
+        for u, p in to_create:
+            Like.objects.get_or_create(user=u, post=p)
+
+        # Reel Likes
         for reel in created_reels:
-            likers = random.sample(all_users, random.randint(1, max(1, len(all_users))))
+            likers = random.sample(all_users, random.randint(1, len(all_users)))
             for liker in likers:
                 ReelLike.objects.get_or_create(user=liker, reel=reel)
 
@@ -553,42 +779,39 @@ class Command(BaseCommand):
                 )
 
         # ── DEMO FOLLOWS ──────────────────────────────────────
-        follow_pairs = [
+        # Clear existing follows for exact matches
+        Follow.objects.all().delete()
+        
+        # Follow pairings:
+        # maya follows nomad_rahul, elise, trek_priya
+        # leo follows zara, maya, elise
+        # nomad_rahul follows trek_priya, leo
+        follow_pairings = [
             ('maya_wanders', 'nomad_rahul'),
             ('maya_wanders', 'elise_travels'),
             ('maya_wanders', 'trek_priya'),
+            ('leo_captures', 'zara_roams'),
+            ('leo_captures', 'maya_wanders'),
+            ('leo_captures', 'elise_travels'),
             ('nomad_rahul', 'trek_priya'),
             ('nomad_rahul', 'leo_captures'),
-            ('elise_travels', 'leo_captures'),
-            ('elise_travels', 'zara_roams'),
-            ('leo_captures', 'maya_wanders'),
-            ('leo_captures', 'zara_roams'),
-            ('trek_priya', 'maya_wanders'),
-            ('trek_priya', 'nomad_rahul'),
-            ('zara_roams', 'elise_travels'),
-            ('zara_roams', 'leo_captures'),
         ]
-        for follower_name, following_name in follow_pairs:
+        for follower_name, following_name in follow_pairings:
             f_user = created_users.get(follower_name)
             t_user = created_users.get(following_name)
             if f_user and t_user:
                 Follow.objects.get_or_create(follower=f_user, following=t_user)
 
+        # Recalculate all score values for users
+        for u in all_users:
+            profile = u.profile
+            profile.recalculate_explorer_score()
+
         # ── SUMMARY ────────────────────────────────────────────
-        self.stdout.write('')
-        self.stdout.write(self.style.SUCCESS('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-        self.stdout.write(self.style.SUCCESS('✅ Demo data loaded successfully!'))
-        self.stdout.write(f'   👥 {len(users_data)} explorer accounts created')
-        self.stdout.write(f'   📸 {len(posts_data)} travel posts created')
-        self.stdout.write(f'   🎬 {len(reels_data)} travel reels created')
-        self.stdout.write(f'   🧭 {len(guides_data)} local guides created')
-        self.stdout.write(self.style.SUCCESS('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-        self.stdout.write('')
-        self.stdout.write('🚀 Now run:  python manage.py runserver')
-        self.stdout.write('🌐 Visit:    http://127.0.0.1:8000/')
-        self.stdout.write('')
-        self.stdout.write('📧 Demo login credentials:')
-        self.stdout.write('   Username: maya_wanders  | Password: Travel@2024')
-        self.stdout.write('   Username: nomad_rahul   | Password: Travel@2024')
-        self.stdout.write('   Username: elise_travels | Password: Travel@2024')
-        self.stdout.write('   Username: leo_captures  | Password: Travel@2024')
+        self.stdout.write('  ✅ Created 6 demo users')
+        self.stdout.write('  ✅ Created 10 demo posts')
+        self.stdout.write('  ✅ Created 6 demo reels')
+        self.stdout.write('  ✅ Created 6 demo guides')
+        self.stdout.write('  ✅ Created 3 demo destinations')
+        self.stdout.write('  ✅ Demo data ready! Run server and visit /feed/')
+

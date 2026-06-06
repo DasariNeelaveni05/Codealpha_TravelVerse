@@ -1,0 +1,45 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}Community Feed | TravelVerse{% endblock %}
+
+{% block content %}
+<!-- Full-width Stunning Hero Section -->
+<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80');">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>🌍 Public Community Feed</h1>
+    <p>Discover public stories and off-the-beaten-path destinations shared by travelers around the globe.</p>
+    <a href="#feed-container-start" class="btn btn-primary">Start Exploring</a>
+  </div>
+</section>
+
+<!-- Filter Category Pills -->
+<div id="feed-container-start" class="category-chips" style="margin-top: 2.5rem; justify-content: center;">
+  <a href="{% url 'community_feed' %}" class="meta-chip {% if not selected_category and not selected_filter %}active{% endif %}">🔥 All Stories</a>
+  <a href="{% url 'community_feed' %}?filter=hidden_gems" class="meta-chip {% if selected_filter == 'hidden_gems' %}active{% endif %}">💎 Hidden Gems</a>
+  <a href="{% url 'community_feed' %}?category=beach" class="meta-chip {% if selected_category == 'beach' %}active{% endif %}">🏖️ Beaches</a>
+  <a href="{% url 'community_feed' %}?category=mountain" class="meta-chip {% if selected_category == 'mountain' %}active{% endif %}">⛰️ Mountains</a>
+  <a href="{% url 'community_feed' %}?category=food" class="meta-chip {% if selected_category == 'food' %}active{% endif %}">🍜 Food</a>
+  <a href="{% url 'community_feed' %}?category=island" class="meta-chip {% if selected_category == 'island' %}active{% endif %}">🏝️ Islands</a>
+  <a href="{% url 'community_feed' %}?category=adventure" class="meta-chip {% if selected_category == 'adventure' %}active{% endif %}">🧗 Adventure</a>
+  <a href="{% url 'community_feed' %}?category=historical" class="meta-chip {% if selected_category == 'historical' %}active{% endif %}">🏛️ Historic</a>
+  <a href="{% url 'community_feed' %}?category=nature" class="meta-chip {% if selected_category == 'nature' %}active{% endif %}">🌲 Nature</a>
+</div>
+
+<div class="feed-header" style="max-width: 800px; margin: 2rem auto 1rem;">
+  <h2>Latest Travel Stories</h2>
+</div>
+
+<div id="feed-cards-view" data-cards-panel style="max-width: 800px; margin: 0 auto 4rem;">
+  <div id="feed-container" class="feed-cards-panel" data-feed data-next-page="{% if posts.has_next %}{{ posts.next_page_number }}{% endif %}">
+    {% for post in posts %}
+      <div class="stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.1s)">
+        {% include 'partials/feed_post.html' with post=post %}
+      </div>
+    {% empty %}
+      {% include 'partials/empty_state_card.html' with title="No public posts found" message="Be the first to share a public travel story!" %}
+    {% endfor %}
+  </div>
+  <div id="feed-loader" class="loader hidden">Loading more gems...</div>
+</div>
+{% endblock %}

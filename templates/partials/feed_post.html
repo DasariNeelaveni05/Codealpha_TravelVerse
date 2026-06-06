@@ -27,7 +27,9 @@
       {% endfor %}
     </div>
     {% else %}
-    <img src="{% post_image_url post %}" alt="{{ post.location }}" loading="lazy" class="placeholder-hero-img">
+    <img src="{{ post.get_image }}" alt="{{ post.location }}"
+         class="post-img" style="width:100%;max-height:500px;object-fit:cover;"
+         onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80'">
     {% endif %}
     <div class="heart-burst" aria-hidden="true">❤️</div>
     {% if post.budget or post.budget_amount %}<span class="budget-floating">💰 {{ post.budget|default:post.budget_amount }}</span>{% endif %}

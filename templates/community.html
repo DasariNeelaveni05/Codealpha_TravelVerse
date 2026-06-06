@@ -1,410 +1,575 @@
 {% extends 'app_base.html' %}
 {% load static %}
-{% block title %}Community Hub{% endblock %}
+{% block title %}Community Hub | TravelVerse{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="stylesheet" href="{% static 'css/community.css' %}">
+<style>
+/* ── Page layout ──────────────────────────────────────────── */
+.community-page { max-width: 900px; margin: 0 auto; padding: 0 0 80px; }
+
+/* ── Hero banner ──────────────────────────────────────────── */
+.comm-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 20px; padding: 36px 32px; margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 20px; position: relative; overflow: hidden;
+}
+.comm-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=900&q=50')
+              center/cover no-repeat;
+  opacity: 0.12;
+}
+.comm-hero-text { position: relative; z-index: 1; }
+.comm-hero-text h1 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.comm-hero-text p  { font-size: 14px; color: rgba(255,255,255,0.7); max-width: 420px; }
+.comm-hero-stats {
+  display: flex; gap: 24px; position: relative; z-index: 1;
+}
+.comm-stat { text-align: center; }
+.comm-stat-num { font-size: 28px; font-weight: 900; color: #fff; display: block; }
+.comm-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; }
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.comm-tabs {
+  display: flex; gap: 6px; overflow-x: auto;
+  scrollbar-width: none; margin-bottom: 24px; padding-bottom: 2px;
+}
+.comm-tabs::-webkit-scrollbar { display: none; }
+.comm-tab {
+  padding: 8px 18px; border-radius: 30px; border: 1.5px solid var(--border-color, #e5e7eb);
+  background: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: all 0.2s; color: var(--text-secondary, #718096);
+}
+.comm-tab.active {
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  border-color: transparent; color: #fff;
+}
+.comm-tab:hover:not(.active) { border-color: #2B6CB0; color: #2B6CB0; }
+
+/* ── Panel ────────────────────────────────────────────────── */
+.comm-panel { display: none; }
+.comm-panel.active { display: block; animation: fadeIn .25s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* ── Section header ───────────────────────────────────────── */
+.section-hdr {
+  margin-bottom: 20px;
+}
+.section-hdr h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.section-hdr p  { font-size: 13px; color: var(--text-secondary, #718096); }
+
+/* ── Search/filter row ────────────────────────────────────── */
+.comm-search {
+  display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+}
+.comm-search input {
+  flex: 1; min-width: 200px; padding: 10px 16px; border-radius: 30px;
+  border: 1.5px solid var(--border-color, #e5e7eb);
+  font-size: 14px; outline: none; transition: border .2s;
+}
+.comm-search input:focus { border-color: #2B6CB0; }
+.comm-search button {
+  padding: 10px 20px; border-radius: 30px; font-weight: 700; font-size: 13px;
+  background: linear-gradient(135deg,#2B6CB0,#38B2AC); color:#fff; border:none;
+  cursor:pointer; transition:opacity .2s;
+}
+.comm-search button:hover { opacity: 0.88; }
+
+/* ── Filter pills ─────────────────────────────────────────── */
+.filter-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-pill {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  border: 1.5px solid var(--border-color, #e5e7eb);
+  background: #fff; color: var(--text-secondary,#718096);
+  cursor: pointer; transition: all .2s;
+}
+.filter-pill.active, .filter-pill:hover {
+  background: linear-gradient(135deg,#2B6CB0,#38B2AC);
+  border-color: transparent; color: #fff;
+}
+
+/* ── Cards grid ───────────────────────────────────────────── */
+.cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.cards-grid-2 {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+/* ── Guide card ───────────────────────────────────────────── */
+.guide-card {
+  background: #fff; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.guide-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(43,108,176,0.15); }
+.guide-card-banner {
+  height: 100px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.guide-card-avatar {
+  width: 80px; height: 80px; border-radius: 50%;
+  border: 4px solid #fff;
+  object-fit: cover;
+  position: absolute; bottom: -30px; left: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.guide-card-body { padding: 40px 20px 20px; }
+.guide-name-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.guide-name { font-size: 17px; font-weight: 800; }
+.verified-badge {
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px;
+}
+.guide-rating { font-size: 13px; color: #718096; margin-bottom: 10px; }
+.guide-rating strong { color: #F6AD55; }
+.guide-available { display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
+.guide-available.yes { background:#C6F6D5; color:#276749; }
+.guide-available.no  { background:#FED7D7; color:#9B2C2C; }
+.guide-destinations {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px;
+}
+.dest-tag {
+  background: var(--bg-soft,#f0f4f8); color: var(--text-secondary,#718096);
+  font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 10px;
+}
+.guide-bio {
+  font-size: 12px; color: #718096; line-height: 1.5; margin-bottom: 14px;
+  display: -webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.guide-actions { display: flex; gap: 8px; }
+.btn-wa {
+  flex: 1; display: flex; align-items:center; justify-content:center; gap:6px;
+  padding: 9px 0; border-radius: 12px; font-weight: 700; font-size: 13px;
+  background: #25D366; color: #fff; text-decoration: none;
+  transition: opacity .2s;
+}
+.btn-wa:hover { opacity: 0.85; }
+.btn-profile {
+  flex: 1; display: flex; align-items:center; justify-content:center;
+  padding: 9px 0; border-radius: 12px; font-weight: 700; font-size: 13px;
+  background: var(--bg-soft,#f0f4f8); color: var(--text-primary,#1c1e21);
+  text-decoration: none; transition: background .2s;
+}
+.btn-profile:hover { background: #e2e8f0; }
+
+/* ── Group card ───────────────────────────────────────────── */
+.group-card {
+  background: #fff; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  transition: transform 0.2s;
+}
+.group-card:hover { transform: translateY(-3px); }
+.group-cover {
+  height: 100px; background: linear-gradient(135deg,#667eea,#764ba2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+}
+.group-body { padding: 16px; }
+.group-name { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
+.group-desc { font-size: 12px; color: #718096; margin-bottom: 10px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.group-meta { font-size: 12px; color:#718096; margin-bottom: 12px; }
+.btn-join {
+  width:100%; padding: 8px; border-radius: 12px;
+  font-weight: 700; font-size: 13px; border: none; cursor: pointer;
+  background: linear-gradient(135deg,#2B6CB0,#38B2AC); color: #fff;
+  transition: opacity .2s;
+}
+.btn-join:hover { opacity: 0.85; }
+.btn-join.joined {
+  background: var(--bg-soft,#f0f4f8); color:#718096;
+}
+
+/* ── Chat room card ───────────────────────────────────────── */
+.chat-card {
+  background: #fff; border-radius: 16px; padding: 16px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  text-decoration: none; color: inherit;
+  transition: transform .2s, box-shadow .2s;
+}
+.chat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(43,108,176,0.12); }
+.chat-icon {
+  width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+  background: linear-gradient(135deg,#2B6CB0,#38B2AC);
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+}
+.chat-info { flex: 1; min-width: 0; }
+.chat-name { font-weight: 700; font-size: 15px; margin-bottom: 2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-desc { font-size: 12px; color:#718096;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-meta { font-size: 11px; color:#A0AEC0; margin-top: 3px; }
+.chat-enter-btn {
+  padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  background: linear-gradient(135deg,#2B6CB0,#38B2AC); color:#fff;
+  text-decoration:none; flex-shrink:0;
+  transition: opacity .2s;
+}
+.chat-enter-btn:hover { opacity: 0.85; }
+
+/* ── Event card ───────────────────────────────────────────── */
+.event-card {
+  background: #fff; border-radius: 20px; overflow:hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  transition: transform .2s;
+}
+.event-card:hover { transform: translateY(-3px); }
+.event-cover {
+  height: 110px;
+  background: linear-gradient(135deg, #F093FB, #F5576C);
+  display:flex; align-items:center; justify-content:center; font-size:44px;
+}
+.event-body { padding: 16px; }
+.event-title { font-weight: 800; font-size: 15px; margin-bottom:4px; }
+.event-desc  { font-size: 12px; color:#718096; margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.event-meta  { font-size: 11px; color:#718096; margin-bottom: 12px; display:flex; gap:8px; flex-wrap:wrap; }
+.btn-rsvp {
+  width:100%; padding:8px; border-radius:12px; font-weight:700; font-size:13px;
+  border:none; cursor:pointer;
+  background: linear-gradient(135deg,#F093FB,#F5576C); color:#fff;
+  transition: opacity .2s;
+}
+.btn-rsvp:hover { opacity:0.85; }
+
+/* ── Buddy card ───────────────────────────────────────────── */
+.buddy-card {
+  background:#fff; border-radius:20px; overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,0.07); transition:transform .2s;
+}
+.buddy-card:hover { transform:translateY(-3px); }
+.buddy-cover {
+  height:90px; background-size:cover; background-position:center;
+  position:relative;
+}
+.buddy-cover-overlay {
+  position:absolute; inset:0; background:rgba(0,0,0,0.35);
+  display:flex; align-items:flex-end; padding:10px;
+}
+.buddy-dest { color:#fff; font-weight:700; font-size:13px; }
+.buddy-body { padding:14px; }
+.buddy-user-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.buddy-avatar {
+  width:36px; height:36px; border-radius:50%; object-fit:cover;
+  background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:700; font-size:14px;
+}
+.buddy-username { font-weight:700; font-size:14px; }
+.buddy-meta { font-size:12px; color:#718096; margin-bottom:10px; }
+.buddy-actions { display:flex; gap:8px; }
+.btn-join-trip {
+  flex:1; padding:8px; border-radius:12px; font-weight:700; font-size:13px;
+  border:none; cursor:pointer;
+  background:linear-gradient(135deg,#2B6CB0,#38B2AC); color:#fff;
+  transition:opacity .2s;
+}
+.btn-join-trip:hover { opacity:0.85; }
+.btn-view-profile {
+  flex:1; padding:8px; border-radius:12px; font-weight:700; font-size:13px;
+  background:var(--bg-soft,#f0f4f8); color:var(--text-primary,#1c1e21);
+  text-decoration:none; text-align:center; transition:background .2s;
+}
+.btn-view-profile:hover { background:#e2e8f0; }
+
+/* ── Map ──────────────────────────────────────────────────── */
+#guides-map { height:240px; border-radius:16px; margin-bottom:20px; z-index:0; }
+
+/* ── Empty state ──────────────────────────────────────────── */
+.empty-state {
+  text-align:center; padding:60px 20px; background:#fff;
+  border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.06);
+  grid-column: 1/-1;
+}
+.empty-state-icon { font-size:56px; margin-bottom:14px; }
+.empty-state h3 { font-weight:800; font-size:18px; margin-bottom:6px; }
+.empty-state p { color:#718096; font-size:13px; }
+</style>
 {% endblock %}
 
-{% block content %}
-<div class="community-hub">
+{% block main %}
+<div class="community-page">
 
-  <!-- Hero Section -->
-  <div class="community-hero glass-card">
-    <div class="community-hero-content">
+  <!-- Hero -->
+  <div class="comm-hero">
+    <div class="comm-hero-text">
       <h1>🌍 Travel Community Hub</h1>
-      <p>Connect with travelers, find buddies, join groups, and explore together.</p>
+      <p>Find travel buddies, join groups, chat with explorers, and discover local guides.</p>
     </div>
-    <div class="community-hero-stats">
-      <div class="hero-stat"><span class="hero-stat-num">{{ buddy_trips|length }}</span><span class="hero-stat-label">Active Trips</span></div>
-      <div class="hero-stat"><span class="hero-stat-num">{{ groups|length }}</span><span class="hero-stat-label">Travel Groups</span></div>
-      <div class="hero-stat"><span class="hero-stat-num">{{ events|length }}</span><span class="hero-stat-label">Events</span></div>
-      <div class="hero-stat"><span class="hero-stat-num">{{ guides|length }}</span><span class="hero-stat-label">Local Guides</span></div>
+    <div class="comm-hero-stats">
+      <div class="comm-stat">
+        <span class="comm-stat-num">{{ buddy_trips|length }}</span>
+        <span class="comm-stat-lbl">Active Trips</span>
+      </div>
+      <div class="comm-stat">
+        <span class="comm-stat-num">{{ groups|length }}</span>
+        <span class="comm-stat-lbl">Groups</span>
+      </div>
+      <div class="comm-stat">
+        <span class="comm-stat-num">{{ guides|length }}</span>
+        <span class="comm-stat-lbl">Guides</span>
+      </div>
+      <div class="comm-stat">
+        <span class="comm-stat-num">{{ events|length }}</span>
+        <span class="comm-stat-lbl">Events</span>
+      </div>
     </div>
   </div>
 
-  <!-- Tab Navigation -->
-  <div class="community-tabs">
-    <button class="community-tab active" data-tab="buddy">🤝 Buddy Finder</button>
-    <button class="community-tab" data-tab="chats">💬 Community Chats</button>
-    <button class="community-tab" data-tab="map">🗺️ Explorer Map</button>
-    <button class="community-tab" data-tab="guides">🧭 Local Guides</button>
-    <button class="community-tab" data-tab="groups">👥 Travel Groups</button>
-    <button class="community-tab" data-tab="events">📅 Events</button>
+  <!-- Tabs -->
+  <div class="comm-tabs" id="comm-tabs">
+    <button class="comm-tab active" data-tab="buddy">🤝 Buddy Finder</button>
+    <button class="comm-tab" data-tab="chats">💬 Chats</button>
+    <button class="comm-tab" data-tab="groups">👥 Groups</button>
+    <button class="comm-tab" data-tab="guides">🧭 Guides</button>
+    <button class="comm-tab" data-tab="events">📅 Events</button>
   </div>
 
-  <!-- ═══════ BUDDY FINDER TAB ═══════ -->
-  <div class="community-panel active" id="panel-buddy">
-    <div class="panel-header">
+  <!-- ═════════ BUDDY FINDER ═════════ -->
+  <div class="comm-panel active" id="panel-buddy">
+    <div class="section-hdr">
       <h2>🤝 Find Your Travel Buddy</h2>
-      <p>Match with explorers heading to the same destination & dates</p>
+      <p>Connect with explorers heading to the same destination on the same dates.</p>
     </div>
-
-    <!-- Search & Filter -->
-    <form method="get" action="{% url 'companions' %}" class="buddy-search glass-card">
-      <input type="search" name="destination" class="form-control" placeholder="Search destinations...">
-      <input type="date" name="from" class="form-control">
-      <button type="submit" class="btn btn-primary">Find Matches</button>
+    <form method="get" action="{% url 'companions' %}" class="comm-search">
+      <input type="search" name="destination" placeholder="🔍 Search by destination or country..." value="{{ request.GET.destination }}">
+      <input type="date" name="from" style="padding:10px 14px;border-radius:30px;border:1.5px solid #e5e7eb;font-size:14px;outline:none;" value="{{ request.GET.from }}">
+      <button type="submit">Find Matches</button>
     </form>
 
-    <!-- Post a Trip CTA -->
-    <div class="buddy-cta glass-card">
-      <div class="buddy-cta-text">
-        <h3>Looking for travel partners?</h3>
-        <p>Post your trip and let fellow travelers join you!</p>
-      </div>
-      <a href="{% url 'companions' %}" class="btn btn-primary">Post a Trip</a>
-    </div>
-
-    <!-- Trip Listings -->
-    <div class="buddy-grid">
+    {% if buddy_trips %}
+    <div class="cards-grid">
       {% for trip in buddy_trips %}
-      <article class="buddy-card glass-card">
-        <div class="buddy-card-banner" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80')">
-          <div class="buddy-card-overlay">
-            <span class="buddy-destination">📍 {{ trip.destination }}{% if trip.country %}, {{ trip.country }}{% endif %}</span>
+      <div class="buddy-card">
+        <div class="buddy-cover" style="background-image:url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=70');">
+          <div class="buddy-cover-overlay">
+            <span class="buddy-dest">📍 {{ trip.destination }}{% if trip.country %}, {{ trip.country }}{% endif %}</span>
           </div>
         </div>
-        <div class="buddy-card-body">
-          <div class="buddy-user">
-            <span class="avatar-sm">
-              {% if trip.user.profile.avatar %}<img src="{{ trip.user.profile.avatar.url }}" alt="">{% else %}{{ trip.user.profile.badge_icon }}{% endif %}
-            </span>
-            <div>
-              <strong>@{{ trip.user.username }}</strong>
-              <span class="badge-pill badge-{{ trip.user.profile.badge_slug }}">{{ trip.user.profile.badge_full_name }}</span>
-            </div>
+        <div class="buddy-body">
+          <div class="buddy-user-row">
+            <div class="buddy-avatar">{{ trip.user.username|first|upper }}</div>
+            <span class="buddy-username">@{{ trip.user.username }}</span>
           </div>
-          {% if trip.start_date %}<span class="buddy-meta">📅 {{ trip.start_date }}{% if trip.end_date %} – {{ trip.end_date }}{% endif %}</span>{% endif %}
-          {% if trip.budget_range %}<span class="buddy-meta">💰 {{ trip.budget_range }}</span>{% endif %}
-          {% if trip.description %}<p class="buddy-desc">{{ trip.description|truncatewords:25 }}</p>{% endif %}
+          <div class="buddy-meta">
+            {% if trip.start_date %}📅 {{ trip.start_date }}{% if trip.end_date %} → {{ trip.end_date }}{% endif %}&nbsp;&nbsp;{% endif %}
+            {% if trip.budget_range %}💰 {{ trip.budget_range }}{% endif %}
+          </div>
+          {% if trip.description %}
+          <p style="font-size:12px;color:#718096;margin-bottom:10px;line-height:1.5;">{{ trip.description|truncatewords:20 }}</p>
+          {% endif %}
           <div class="buddy-actions">
-            <a href="{% url 'profile' trip.user.username %}" class="btn btn-sm btn-outline">View Profile</a>
+            <a href="{% url 'profile' trip.user.username %}" class="btn-view-profile">View Profile</a>
             {% if user != trip.user %}
-            <button type="button" class="btn btn-sm btn-primary" data-join-trip="{{ trip.id }}">Join Trip</button>
+            <button class="btn-join-trip" data-join-trip="{{ trip.id }}">Request to Join</button>
             {% endif %}
           </div>
         </div>
-      </article>
-      {% empty %}
-      <div class="community-empty glass-card">
-        <div class="community-empty-icon">🤝</div>
-        <h3>No active trips yet</h3>
-        <p>Be the first to post a trip and find fellow explorers!</p>
-        <a href="{% url 'companions' %}" class="btn btn-primary">Post a Trip</a>
       </div>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">🤝</div>
+      <h3>No active trips yet</h3>
+      <p>Be the first to post a trip and find fellow explorers!</p>
+      <a href="{% url 'companions' %}" style="display:inline-block;margin-top:16px;background:linear-gradient(135deg,#2B6CB0,#38B2AC);color:#fff;padding:10px 24px;border-radius:30px;font-weight:700;text-decoration:none;">Post a Trip</a>
+    </div>
+    {% endif %}
   </div>
 
-  <!-- ═══════ COMMUNITY CHATS TAB ═══════ -->
-  <div class="community-panel" id="panel-chats">
-    <div class="panel-header">
-      <h2>💬 Community Chats</h2>
-      <p>Join conversations with travelers from around the world</p>
+  <!-- ═════════ CHATS ═════════ -->
+  <div class="comm-panel" id="panel-chats">
+    <div class="section-hdr">
+      <h2>💬 Community Chat Rooms</h2>
+      <p>Join live conversations with fellow travelers around the world.</p>
     </div>
 
-    <div class="chat-rooms-grid">
-      <!-- Default Chat Rooms -->
-      <a href="{% url 'chat_room' 'global-travelers' %}" class="chat-room-card glass-card default-room">
-        <div class="chat-room-icon">🌍</div>
-        <div class="chat-room-info">
-          <h3>Global Travelers</h3>
-          <p>Chat with travelers worldwide</p>
-        </div>
-        <span class="chat-room-badge">Live</span>
-      </a>
-
-      <a href="{% url 'chat_room' 'solo-travelers' %}" class="chat-room-card glass-card">
-        <div class="chat-room-icon">🎒</div>
-        <div class="chat-room-info">
-          <h3>Solo Travelers</h3>
-          <p>Tips & stories for solo adventurers</p>
-        </div>
-      </a>
-
-      <a href="{% url 'chat_room' 'backpackers' %}" class="chat-room-card glass-card">
-        <div class="chat-room-icon">🏕️</div>
-        <div class="chat-room-info">
-          <h3>Backpackers</h3>
-          <p>Budget travel hacks & routes</p>
-        </div>
-      </a>
-
+    {% if chat_rooms %}
+    <div style="display:flex;flex-direction:column;gap:10px;">
       {% for room in chat_rooms %}
-      <a href="{% url 'chat_room' room.slug %}" class="chat-room-card glass-card">
-        <div class="chat-room-icon">{{ room.icon }}</div>
-        <div class="chat-room-info">
-          <h3>{{ room.name }}</h3>
-          <p>{{ room.description|truncatewords:8 }}</p>
-          <span class="chat-room-members">{{ room.member_count }} members</span>
+      <a href="{% url 'chat_room' room.slug %}" class="chat-card">
+        <div class="chat-icon">{{ room.icon }}</div>
+        <div class="chat-info">
+          <div class="chat-name">{{ room.name }}</div>
+          <div class="chat-desc">{{ room.description|default:"Community travel chat" }}</div>
+          <div class="chat-meta">👥 {{ room.member_count }} members · {{ room.get_room_type_display }}</div>
         </div>
+        <span class="chat-enter-btn">Enter →</span>
       </a>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">💬</div>
+      <h3>No chat rooms available</h3>
+      <p>Chat rooms will appear here once created by admins.</p>
+    </div>
+    {% endif %}
   </div>
 
-  <!-- ═══════ EXPLORER MAP TAB ═══════ -->
-  <div class="community-panel" id="panel-map">
-    <div class="panel-header">
-      <h2>🗺️ Interactive Explorer Map</h2>
-      <p>See where travelers have discovered hidden gems, shared routes & pins</p>
-    </div>
-
-    <div class="community-map-container glass-card">
-      <div id="community-map" style="width:100%;height:450px;border-radius:12px;"></div>
-    </div>
-
-    <div class="map-legend glass-card">
-      <h4>Map Legend</h4>
-      <div class="legend-items">
-        <span class="legend-item"><span class="legend-dot" style="background:#e74c3c"></span> Hidden Gems</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#3498db"></span> Traveler Pins</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span> Shared Routes</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#f39c12"></span> Discoveries</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════ LOCAL GUIDES TAB ═══════ -->
-  <div class="community-panel" id="panel-guides">
-    <div class="panel-header">
-      <h2>🧭 Verified Local Guides</h2>
-      <p>Connect with experienced local guides for authentic experiences</p>
-    </div>
-
-    <div class="guides-grid">
-      {% for guide in guides %}
-      <article class="guide-card glass-card">
-        <div class="guide-card-header">
-          <span class="avatar-md">
-            {% if guide.profile_image_url %}
-            <img src="{{ guide.profile_image_url }}" alt="{{ guide.user.username }}">
-            {% elif guide.user.profile.avatar %}
-            <img src="{{ guide.user.profile.avatar.url }}" alt="{{ guide.user.username }}">
-            {% else %}
-            <div class="guide-avatar-placeholder">🧭</div>
-            {% endif %}
-          </span>
-          <div class="guide-info">
-            <h3>{{ guide.user.get_full_name|default:guide.user.username }}</h3>
-            {% if guide.is_verified %}<span class="verified-badge">✅ Verified</span>{% endif %}
-            <div class="guide-rating">
-              ⭐ {{ guide.rating }}/5 · {{ guide.total_tours }} tours
-            </div>
-          </div>
-        </div>
-        <div class="guide-details">
-          {% if guide.languages %}<span class="guide-tag">🗣️ {{ guide.languages }}</span>{% endif %}
-          {% if guide.speciality %}<span class="guide-tag">🎯 {{ guide.speciality }}</span>{% endif %}
-          {% if guide.experience_years %}<span class="guide-tag">📅 {{ guide.experience_years }}y exp</span>{% endif %}
-          {% if guide.price_per_day %}<span class="guide-tag">💰 ${{ guide.price_per_day }}/day</span>{% endif %}
-        </div>
-        {% if guide.bio %}<p class="guide-bio">{{ guide.bio|truncatewords:20 }}</p>{% endif %}
-        <div class="guide-actions">
-          <a href="{% url 'profile' guide.user.username %}" class="btn btn-sm btn-outline">View Profile</a>
-          {% if guide.whatsapp %}<a href="https://wa.me/{{ guide.whatsapp }}" class="btn btn-sm btn-primary" target="_blank">💬 WhatsApp</a>{% endif %}
-        </div>
-      </article>
-      {% empty %}
-      <div class="community-empty glass-card">
-        <div class="community-empty-icon">🧭</div>
-        <h3>No verified guides yet</h3>
-        <p>Are you a local guide? Contact us to get verified and listed!</p>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- ═══════ TRAVEL GROUPS TAB ═══════ -->
-  <div class="community-panel" id="panel-groups">
-    <div class="panel-header">
+  <!-- ═════════ GROUPS ═════════ -->
+  <div class="comm-panel" id="panel-groups">
+    <div class="section-hdr">
       <h2>👥 Travel Groups</h2>
-      <p>Join travel groups based on your interests</p>
+      <p>Join communities of like-minded travelers organized by interest.</p>
     </div>
 
-    <div class="groups-grid">
+    {% if groups %}
+    <div class="cards-grid">
       {% for group in groups %}
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('{{ group.cover_url|default:'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&q=80' }}')">
-          <span class="group-icon">{{ group.icon }}</span>
-        </div>
-        <div class="group-card-body">
-          <h3>{{ group.name }}</h3>
-          <span class="group-category">{{ group.get_category_display }}</span>
-          <p class="group-desc">{{ group.description|truncatewords:15 }}</p>
-          <div class="group-footer">
-            <span class="group-members">👥 {{ group.members_count|default:group.member_count }} members</span>
-            <a href="{% url 'group_detail' group.slug %}" class="btn btn-sm btn-primary">View Group</a>
+      <div class="group-card">
+        <div class="group-cover">{{ group.icon }}</div>
+        <div class="group-body">
+          <div class="group-name">{{ group.name }}</div>
+          <div class="group-desc">{{ group.description }}</div>
+          <div class="group-meta">👥 {{ group.member_count }} members · {{ group.get_category_display }}</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-join {% if group in user_groups %}joined{% endif %}"
+                    data-join-group="{{ group.slug }}">
+              {% if group in user_groups %}✓ Joined{% else %}+ Join Group{% endif %}
+            </button>
+            <a href="{% url 'group_detail' group.slug %}"
+               style="flex:1;padding:8px;border-radius:12px;font-weight:700;font-size:13px;
+                      text-align:center;text-decoration:none;background:var(--bg-soft,#f0f4f8);
+                      color:var(--text-primary,#1c1e21);">View</a>
           </div>
         </div>
-      </article>
-      {% empty %}
-      <!-- Default Groups -->
-      {% with default_groups="🏖️ Beach Lovers,⛰️ Mountain Trekkers,🍜 Food Explorers,🌲 Nature Enthusiasts,🏝️ Island Hoppers,🧗 Adventure Seekers" %}
-      {% for g in default_groups|make_list %}{% endfor %}
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80')">
-          <span class="group-icon">🏖️</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Beach Lovers</h3>
-          <span class="group-category">Beaches</span>
-          <p class="group-desc">For those who live for sun, sand, and ocean waves.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80')">
-          <span class="group-icon">⛰️</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Mountain Trekkers</h3>
-          <span class="group-category">Mountains</span>
-          <p class="group-desc">Conquer peaks and share hiking adventures.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80')">
-          <span class="group-icon">🍜</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Food Explorers</h3>
-          <span class="group-category">Food & Culinary</span>
-          <p class="group-desc">Taste the world, one dish at a time.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80')">
-          <span class="group-icon">🌲</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Nature Enthusiasts</h3>
-          <span class="group-category">Nature & Wildlife</span>
-          <p class="group-desc">Explore forests, wildlife, and natural wonders.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=400&q=80')">
-          <span class="group-icon">🏝️</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Island Hoppers</h3>
-          <span class="group-category">Islands</span>
-          <p class="group-desc">Discover paradise islands around the globe.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="group-card glass-card">
-        <div class="group-card-cover" style="background-image:url('https://images.unsplash.com/photo-1533692328991-08159ff19fca?w=400&q=80')">
-          <span class="group-icon">🧗</span>
-        </div>
-        <div class="group-card-body">
-          <h3>Adventure Seekers</h3>
-          <span class="group-category">Adventure</span>
-          <p class="group-desc">Push your limits with extreme travel experiences.</p>
-          <div class="group-footer">
-            <span class="group-members">👥 0 members</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      {% endwith %}
+      </div>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">👥</div>
+      <h3>No groups yet</h3>
+      <p>Travel groups will appear here once created.</p>
+    </div>
+    {% endif %}
   </div>
 
-  <!-- ═══════ EVENTS TAB ═══════ -->
-  <div class="community-panel" id="panel-events">
-    <div class="panel-header">
-      <h2>📅 Community Events</h2>
-      <p>Meetups, group trips, travel challenges & more</p>
+  <!-- ═════════ GUIDES ═════════ -->
+  <div class="comm-panel" id="panel-guides">
+    <div class="section-hdr">
+      <h2>🧭 Local Guides</h2>
+      <p>Find verified local experts who know every hidden trail and secret spot.</p>
     </div>
 
-    <div class="events-grid">
-      {% for event in events %}
-      <article class="event-card glass-card">
-        <div class="event-card-cover" style="background-image:url('{{ event.cover_url|default:'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=400&q=80' }}')">
-          <span class="event-type-badge">{{ event.get_event_type_display }}</span>
+    <!-- Guide search -->
+    <div class="comm-search" style="margin-bottom:14px;">
+      <input type="text" id="guide-search" placeholder="🔍 Search by city, name, or destination...">
+    </div>
+
+    <!-- Filter pills -->
+    <div class="filter-pills" id="guide-filters">
+      <span class="filter-pill active" data-filter="all">All</span>
+      <span class="filter-pill" data-filter="budget">💰 Budget</span>
+      <span class="filter-pill" data-filter="premium">✨ Premium</span>
+      <span class="filter-pill" data-filter="available">🟢 Available</span>
+      <span class="filter-pill" data-filter="toprated">⭐ Top Rated</span>
+    </div>
+
+    <!-- Leaflet map for guides -->
+    <div id="guides-map"></div>
+
+    {% if guides %}
+    <div class="cards-grid" id="guides-grid">
+      {% for guide in guides %}
+      <div class="guide-card"
+           data-name="{{ guide.user.first_name }} {{ guide.user.last_name }}"
+           data-destinations="{{ guide.destinations }}"
+           data-price="{{ guide.price_per_day }}"
+           data-rating="{{ guide.rating }}"
+           data-available="{{ guide.is_available|yesno:'yes,no' }}">
+        <div class="guide-card-banner"
+             style="background-image:url('{{ guide.profile_image_url|default:'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&q=60' }}');background-size:cover;background-position:center;">
+          <img src="{{ guide.profile_image_url|default:'https://i.pravatar.cc/150?img=60' }}"
+               class="guide-card-avatar"
+               alt="{{ guide.user.get_full_name }}">
         </div>
-        <div class="event-card-body">
-          <h3>{{ event.title }}</h3>
-          {% if event.location %}<span class="event-meta">📍 {{ event.location }}{% if event.country %}, {{ event.country }}{% endif %}</span>{% endif %}
-          {% if event.start_date %}<span class="event-meta">📅 {{ event.start_date|date:"M d, Y" }}{% if event.end_date %} – {{ event.end_date|date:"M d, Y" }}{% endif %}</span>{% endif %}
-          <p class="event-desc">{{ event.description|truncatewords:20 }}</p>
-          <div class="event-footer">
-            <span class="event-attendees">{{ event.attendee_count }}/{{ event.max_attendees }} attending</span>
-            <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-primary">View Event</a>
+        <div class="guide-card-body">
+          <div class="guide-name-row">
+            <span class="guide-name">{{ guide.user.first_name }} {{ guide.user.last_name }}</span>
+            {% if guide.is_verified %}
+            <span class="verified-badge">✓ Verified</span>
+            {% endif %}
+          </div>
+          <div class="guide-rating">
+            <strong>⭐ {{ guide.rating }}</strong> · {{ guide.total_tours }} tours · {{ guide.experience_years }}yr exp
+          </div>
+          <span class="guide-available {% if guide.is_available %}yes{% else %}no{% endif %}">
+            {% if guide.is_available %}🟢 Available Now{% else %}🔴 Unavailable{% endif %}
+          </span>
+          <div class="guide-destinations">
+            {% for dest in guide.destinations.split ',' %}
+            <span class="dest-tag">{{ dest|strip }}</span>
+            {% endfor %}
+          </div>
+          <div class="guide-bio">{{ guide.bio }}</div>
+          <div class="guide-actions">
+            {% if guide.whatsapp_number %}
+            <a href="https://wa.me/{{ guide.whatsapp_number|slice:'1:' }}" target="_blank" rel="noopener" class="btn-wa">
+              📱 WhatsApp
+            </a>
+            {% endif %}
+            <a href="{% url 'profile' guide.user.username %}" class="btn-profile">View Profile</a>
           </div>
         </div>
-      </article>
-      {% empty %}
-      <!-- Default Events -->
-      <article class="event-card glass-card">
-        <div class="event-card-cover" style="background-image:url('https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=400&q=80')">
-          <span class="event-type-badge">Meetup</span>
-        </div>
-        <div class="event-card-body">
-          <h3>Global Travel Meetup 2026</h3>
-          <span class="event-meta">📍 Bali, Indonesia</span>
-          <span class="event-meta">📅 Coming Soon</span>
-          <p class="event-desc">Join travelers from around the world for a weekend of adventure, networking, and exploring Bali's hidden gems.</p>
-          <div class="event-footer">
-            <span class="event-attendees">0/50 attending</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="event-card glass-card">
-        <div class="event-card-cover" style="background-image:url('https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&q=80')">
-          <span class="event-type-badge">Group Trip</span>
-        </div>
-        <div class="event-card-body">
-          <h3>Himalayan Trekking Expedition</h3>
-          <span class="event-meta">📍 Nepal</span>
-          <span class="event-meta">📅 Coming Soon</span>
-          <p class="event-desc">A guided group trek through the stunning Himalayan trails. All experience levels welcome!</p>
-          <div class="event-footer">
-            <span class="event-attendees">0/20 attending</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
-      <article class="event-card glass-card">
-        <div class="event-card-cover" style="background-image:url('https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=400&q=80')">
-          <span class="event-type-badge">Travel Challenge</span>
-        </div>
-        <div class="event-card-body">
-          <h3>30-Day Explorer Challenge</h3>
-          <span class="event-meta">🌍 Worldwide</span>
-          <span class="event-meta">📅 Monthly</span>
-          <p class="event-desc">Post 30 travel moments in 30 days. Earn XP, badges, and community recognition!</p>
-          <div class="event-footer">
-            <span class="event-attendees">Active Challenge</span>
-            <button class="btn btn-sm btn-outline" disabled>Coming Soon</button>
-          </div>
-        </div>
-      </article>
+      </div>
       {% endfor %}
     </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">🧭</div>
+      <h3>No guides yet</h3>
+      <p>Local guides will appear here once they sign up.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ═════════ EVENTS ═════════ -->
+  <div class="comm-panel" id="panel-events">
+    <div class="section-hdr">
+      <h2>📅 Community Events</h2>
+      <p>Meetups, group trips, travel challenges — join the adventure.</p>
+    </div>
+
+    {% if events %}
+    <div class="cards-grid">
+      {% for event in events %}
+      <div class="event-card">
+        <div class="event-cover">📅</div>
+        <div class="event-body">
+          <div class="event-title">{{ event.title }}</div>
+          <div class="event-desc">{{ event.description|default:"Community travel event." }}</div>
+          <div class="event-meta">
+            {% if event.location %}📍 {{ event.location }}{% endif %}
+            {% if event.start_date %}· 📅 {{ event.start_date|date:"M d, Y" }}{% endif %}
+            · 👥 {{ event.attendee_count }} going
+          </div>
+          <a href="{% url 'event_detail' event.slug %}" class="btn-rsvp">View & RSVP →</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">📅</div>
+      <h3>No events scheduled</h3>
+      <p>Community events and meetups will appear here.</p>
+    </div>
+    {% endif %}
   </div>
 
 </div>
@@ -412,6 +577,115 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script id="map-markers-data" type="application/json" data-map-markers>{{ map_markers_json|safe }}</script>
-<script src="{% static 'js/community.js' %}"></script>
+<script>
+(function() {
+  // ── Tab switching ──────────────────────────────────
+  document.querySelectorAll('.comm-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.comm-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Join group ─────────────────────────────────────
+  document.querySelectorAll('[data-join-group]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const slug = btn.dataset.joinGroup;
+      const res = await fetch(`/api/group/${slug}/join/`, {
+        method:'POST',
+        headers:{ 'X-CSRFToken': window.CSRF_TOKEN, 'X-Requested-With':'XMLHttpRequest' }
+      });
+      const d = await res.json();
+      if (d.ok) {
+        btn.textContent = d.joined ? '✓ Joined' : '+ Join Group';
+        btn.classList.toggle('joined', d.joined);
+      }
+    });
+  });
+
+  // ── Request to join trip ────────────────────────────
+  document.querySelectorAll('[data-join-trip]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.joinTrip;
+      const res = await fetch(`/api/trip/${id}/join/`, {
+        method:'POST',
+        headers:{ 'X-CSRFToken': window.CSRF_TOKEN, 'X-Requested-With':'XMLHttpRequest' }
+      });
+      const d = await res.json();
+      if (d.ok) btn.textContent = '✓ Requested';
+    });
+  });
+
+  // ── Guide search filter ────────────────────────────
+  const guideSearch = document.getElementById('guide-search');
+  if (guideSearch) {
+    guideSearch.addEventListener('input', () => {
+      const q = guideSearch.value.toLowerCase();
+      document.querySelectorAll('#guides-grid .guide-card').forEach(card => {
+        const name = (card.dataset.name || '').toLowerCase();
+        const dests = (card.dataset.destinations || '').toLowerCase();
+        card.style.display = (name.includes(q) || dests.includes(q)) ? '' : 'none';
+      });
+    });
+  }
+
+  // ── Guide filter pills ──────────────────────────────
+  document.querySelectorAll('#guide-filters .filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#guide-filters .filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const f = pill.dataset.filter;
+      document.querySelectorAll('#guides-grid .guide-card').forEach(card => {
+        let show = true;
+        if (f === 'budget')    show = parseFloat(card.dataset.price) < 1600;
+        if (f === 'premium')   show = parseFloat(card.dataset.price) >= 2000;
+        if (f === 'available') show = card.dataset.available === 'yes';
+        if (f === 'toprated')  show = parseFloat(card.dataset.rating) >= 4.8;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  // ── Leaflet guides map ─────────────────────────────
+  const mapEl = document.getElementById('guides-map');
+  if (mapEl && window.L) {
+    const map = L.map('guides-map').setView([20.5937, 78.9629], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // City coordinates lookup
+    const CITY_COORDS = {
+      'Ooty': [11.4102, 76.6950], 'Coorg': [12.3375, 75.8069],
+      'Manali': [32.2396, 77.1887], 'Spiti': [32.2461, 78.0337],
+      'Hampi': [15.3350, 76.4600], 'Goa': [15.2993, 74.1240],
+      'Jaipur': [26.9124, 75.7873], 'Alleppey': [9.4981, 76.3388],
+      'Munnar': [10.0889, 77.0595], 'Wayanad': [11.6854, 76.1320],
+      'Leh': [34.1526, 77.5770], 'Kodaikanal': [10.2381, 77.4892],
+    };
+
+    const guides = document.querySelectorAll('#guides-grid .guide-card');
+    guides.forEach(card => {
+      const dests = (card.dataset.destinations || '').split(',').map(d => d.trim());
+      const name  = card.dataset.name || 'Guide';
+      dests.forEach(city => {
+        const coords = CITY_COORDS[city];
+        if (!coords) return;
+        const icon = L.divIcon({
+          html: `<div style="background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+                  color:#fff;border-radius:50%;width:32px;height:32px;
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🧭</div>`,
+          iconSize: [32,32], iconAnchor: [16,16], className: ''
+        });
+        L.marker(coords, { icon })
+          .addTo(map)
+          .bindPopup(`<b>${name}</b><br>📍 ${city}<br>⭐ ${card.dataset.rating}`);
+      });
+    });
+  }
+})();
+</script>
 {% endblock %}

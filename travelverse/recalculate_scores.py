@@ -1,0 +1,1 @@
+# Redundant: Use social/management/commands/recalculate_scores.py instead.

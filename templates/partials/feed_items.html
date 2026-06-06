@@ -1,3 +1,7 @@
 {% for post in posts %}
-{% include 'partials/feed_post.html' %}
+  <div class="stagger-card" style="animation-delay: calc({{ forloop.index }} * 0.08s)">
+    {% include 'partials/feed_post.html' with post=post %}
+  </div>
+{% empty %}
+  {% include 'partials/empty_state_card.html' %}
 {% endfor %}

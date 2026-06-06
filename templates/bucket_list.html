@@ -1,101 +1,54 @@
 {% extends 'app_base.html' %}
-{% load travelverse_tags %}
-{% block title %}Travel Planner & Bucket List{% endblock %}
-
-{% block content %}
-<!-- Full-width Stunning Hero Section -->
-<section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');">
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>Your Bucket List & Planner</h1>
-    <p>Add dream destinations, map out itineraries, track planning progress, and turn your travel goals into reality.</p>
-  </div>
-</section>
-
-    <div class="page-header-row">
-      <div>
-        <h2>🗺️ Active Travel Goals</h2>
-        <p class="subtitle">Stay organized and get ready for your next big adventure</p>
-      </div>
-    </div>
-
-    <!-- Quick Stats row -->
-    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-      <div class="stat-card highlight glass-card stagger-card" style="animation-delay: 0.1s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">{{ travel_stats.bucket_list }}</span>
-        <span>Destinations Saved</span>
-      </div>
-      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.15s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">{{ travel_stats.countries }}</span>
-        <span>Countries Visited</span>
-      </div>
-      <div class="stat-card glass-card stagger-card" style="animation-delay: 0.2s;">
-        <span style="font-size: 1.5rem; font-weight: 800; display: block; color: var(--primary-ocean);">{{ travel_stats.gems_discovered }}</span>
-        <span>Hidden Gems Found</span>
-      </div>
-    </div>
-
-    <!-- Planner Form -->
-    <div class="planner-form glass-card stagger-card" style="animation-delay: 0.2s; padding: 2rem; border-radius: 16px; margin-bottom: 2rem;">
-      <h3 style="margin-bottom: 1.25rem; color: var(--primary-ocean);">➕ Add New Destination</h3>
-      <form method="post" class="form-grid">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="{% if field.name == 'notes' or field.name == 'travel_goal' or field.name == 'destination_name' %}form-full{% endif %}" style="margin-bottom: 1rem;">
-          <label style="display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.35rem; color: var(--text-secondary);">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}<span class="field-error" style="color: var(--danger); font-size: 0.8rem;">{{ field.errors.0 }}</span>{% endif %}
+{% block title %}Bucket List | TravelVerse{% endblock %}
+{% block main %}
+<div class="page-content" style="max-width:800px;margin:0 auto;padding:24px 16px;">
+  <h2 style="font-weight:800;font-size:24px;margin-bottom:24px;">🗺️ My Bucket List</h2>
+  {% if saved_items %}
+    {% for item in saved_items %}
+    <div style="background:#fff;border-radius:20px;padding:16px;
+                display:flex;gap:16px;margin-bottom:16px;
+                box-shadow:0 4px 20px rgba(66,153,225,0.08);">
+      <img src="{{ item.post.get_image }}"
+           style="width:100px;height:100px;object-fit:cover;border-radius:12px;flex-shrink:0;"
+           onerror="this.src='https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=400'">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15px;">{{ item.post.location }}</div>
+        <div style="font-size:12px;color:#718096;margin:4px 0;">
+          {{ item.post.category|capfirst }} · {{ item.post.best_season }}
         </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Add to Planner</button>
+        <div style="font-size:12px;color:#718096;">💰 {{ item.post.budget_per_day }}</div>
+        <div style="margin-top:10px;height:6px;background:#EBF8FF;
+                    border-radius:10px;overflow:hidden;">
+          <div style="width:35%;height:100%;
+                      background:linear-gradient(90deg,#2B6CB0,#38B2AC);
+                      border-radius:10px;"></div>
+        </div>
+        <div style="font-size:11px;color:#A0AEC0;margin-top:4px;">Planning in progress</div>
+      </div>
+      <form method="post" action="{% url 'ajax_save' item.post.id %}">
+        {% csrf_token %}
+        <button type="submit" style="background:none;border:none;
+                cursor:pointer;font-size:18px;color:#E53E3E;">✕</button>
       </form>
     </div>
-
-    <!-- Planner Cards Grid -->
-    <div class="planner-cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-      {% for item in items %}
-      <article class="planner-destination-card glass-card stagger-card priority-{{ item.priority }}" style="animation-delay: calc({{ forloop.index }} * 0.08s); overflow: hidden; border-radius: 16px;">
-        <div class="planner-card-image" style="background-image:url('{% bucket_image_url item forloop.counter0 %}'); height: 180px; background-size: cover; background-position: center;"></div>
-        <div class="planner-card-body" style="padding: 1.5rem;">
-          <div class="planner-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <strong style="font-size: 1.2rem; color: var(--text);">{{ item.destination_name }}</strong>
-            <span class="badge-pill" style="background: var(--bg-soft); color: var(--primary-ocean); font-size: 0.7rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 999px;">
-              {{ item.get_status_display }}
-            </span>
-          </div>
-          
-          <div class="planner-progress" style="margin: 1rem 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
-              <span>Planning Progress</span>
-              <strong>{{ item.progress }}%</strong>
-            </div>
-            <div class="progress-bar" style="height: 8px; background: var(--bg-soft); border-radius: 999px; overflow: hidden;">
-              <div class="progress-fill" style="width: {{ item.progress }}%; height: 100%; background: var(--accent-gradient); border-radius: 999px;"></div>
-            </div>
-          </div>
-          
-          <div class="bucket-meta" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
-            {% if item.priority %}<span class="meta-chip" style="font-size: 0.75rem; background: var(--bg-soft); color: var(--text-secondary); padding: 0.25rem 0.5rem; border-radius: 6px;">⚡ {{ item.get_priority_display }} Priority</span>{% endif %}
-            {% if item.planned_date %}<span class="meta-chip" style="font-size: 0.75rem; background: var(--bg-soft); color: var(--text-secondary); padding: 0.25rem 0.5rem; border-radius: 6px;">✈️ {{ item.planned_date }}</span>{% endif %}
-            {% if item.reminder_date %}<span class="meta-chip" style="font-size: 0.75rem; background: var(--bg-soft); color: var(--text-secondary); padding: 0.25rem 0.5rem; border-radius: 6px;">🔔 Remind: {{ item.reminder_date }}</span>{% endif %}
-            {% if item.travel_goal %}<span class="meta-chip" style="font-size: 0.75rem; background: var(--bg-soft); color: var(--text-secondary); padding: 0.25rem 0.5rem; border-radius: 6px;">🎯 {{ item.travel_goal }}</span>{% endif %}
-          </div>
-          {% if item.notes %}
-          <p class="planner-notes" style="margin-top: 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; border-top: 1px solid var(--border); padding-top: 0.75rem;">
-            {{ item.notes }}
-          </p>
-          {% endif %}
-          {% if item.post %}
-          <a href="{% url 'post_detail' item.post.pk %}" style="display: inline-block; margin-top: 0.75rem; font-size: 0.85rem; font-weight: bold; color: var(--primary-ocean);">
-            View Inspiration Post →
-          </a>
-          {% endif %}
-        </div>
-      </article>
-      {% empty %}
-      <div style="grid-column: 1 / -1; width: 100%;">
-        {% include 'partials/empty_state_card.html' with icon="🗺️" title="Your planner is empty" message="Add dream destinations above or save spots from the feed with the bucket button." cta_url="" cta_label="" image_url="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80" %}
-      </div>
-      {% endfor %}
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center;padding:80px 20px;background:#fff;
+                border-radius:20px;box-shadow:0 4px 20px rgba(66,153,225,0.08);">
+      <div style="font-size:64px;margin-bottom:16px;">🏷️</div>
+      <h3 style="font-weight:800;font-size:20px;margin-bottom:8px;">
+        Your bucket list is empty
+      </h3>
+      <p style="color:#718096;margin-bottom:24px;">
+        Save posts from your feed to plan your dream trips
+      </p>
+      <a href="{% url 'explore' %}"
+         style="background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+                color:#fff;padding:12px 28px;border-radius:30px;
+                font-weight:700;text-decoration:none;">
+        Browse Destinations
+      </a>
     </div>
+  {% endif %}
+</div>
 {% endblock %}

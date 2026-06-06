@@ -1,6 +1,7 @@
 import random
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.utils.text import slugify
 from social.models import Post, Reel, Profile, Comment, Like, Follow
 
@@ -68,8 +69,8 @@ class Command(BaseCommand):
                 if other != user:
                     try:
                         Like.objects.create(user=other, post=post)
-                    except Exception:
-                        pass
+                    except IntegrityError:
+                        continue
 
             for r in range(reels_per):
                 thumb = random.choice(SAMPLE_IMAGES)
@@ -88,8 +89,8 @@ class Command(BaseCommand):
             for followee in random.sample(others, min(3, len(others))):
                 try:
                     Follow.objects.create(follower=a, following=followee)
-                except Exception:
-                    pass
+                except IntegrityError:
+                    continue
 
         self.stdout.write(self.style.SUCCESS(
             f'Generated {len(created_users)} users, {created_posts} posts, {created_reels} reels.'

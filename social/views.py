@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -32,10 +33,12 @@ from .models import (
     ChatRoom,
     Comment,
     CommunityEvent,
+    DirectMessage,
     EventRSVP,
     Follow,
     GroupMembership,
     GuideProfile,
+    TouristHelpRequest,
     HiddenGemVote,
     Like,
     Notification,
@@ -70,7 +73,7 @@ def _json_error(message, status=400):
     return JsonResponse({'ok': False, 'error': message}, status=status)
 
 
-def _notify(recipient, actor, ntype, message, post=None):
+def _notify(recipient, actor, ntype, message, post=None, reel=None):
     if recipient == actor:
         return
     Notification.objects.create(
@@ -79,6 +82,7 @@ def _notify(recipient, actor, ntype, message, post=None):
         notification_type=ntype,
         message=message,
         post=post,
+        reel=reel,
     )
 
 
@@ -87,16 +91,13 @@ def _sidebar_context(request):
 
 
 def _feed_posts(user, page=1, per_page=6, category=None):
-    if user.is_authenticated:
-        following_ids = user.following_set.values_list('following_id', flat=True)
-        qs = Post.objects.filter(
-            Q(author_id__in=following_ids) | Q(author=user) | Q(is_hidden_gem=True)
-        ).distinct()
-    else:
-        qs = Post.objects.all()
+    """Show all public posts from all users for a continuous global feed."""
+    qs = Post.objects.all()
     valid_categories = {choice[0] for choice in Post.CATEGORY_CHOICES}
+    
     if category in valid_categories:
         qs = qs.filter(category=category)
+        
     qs = qs.select_related('author', 'author__profile').prefetch_related('images', 'likes')
     if user.is_authenticated:
         qs = qs.annotate(
@@ -136,15 +137,40 @@ def _geocode_post(post):
         post.save(update_fields=['latitude', 'longitude'])
 
 
+def home_view(request):
+    from .models import Post, UserProfile
+    from django.db.models import F
+    
+    trending_posts = Post.objects.annotate(gem_score=F('hidden_gem_score')).order_by(
+        '-gem_score', '-created_at'
+    ).select_related('author', 'author__profile')[:6]
+    
+    top_explorers = UserProfile.objects.order_by(
+        '-explorer_score'
+    ).select_related('user')[:6]
+    
+    # Placeholder destinations if no posts yet
+    placeholder_destinations = [
+        {'name':'Santorini, Greece',  'img':'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&q=80', 'score':9.4, 'meta':'❤️ 2.8K · Island'},
+        {'name':'Spiti Valley, India','img':'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80', 'score':9.1, 'meta':'❤️ 1.5K · Mountain'},
+        {'name':'Maldives Atoll',     'img':'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&q=80', 'score':9.6, 'meta':'❤️ 5.2K · Beach'},
+        {'name':'Kyoto, Japan',       'img':'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80', 'score':9.3, 'meta':'❤️ 4.1K · Historical'},
+        {'name':'Faroe Islands',      'img':'https://images.unsplash.com/photo-1520769945061-0a448c463865?w=600&q=80', 'score':9.8, 'meta':'❤️ 3.4K · Nature'},
+        {'name':'Kerala, India',      'img':'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80', 'score':8.8, 'meta':'❤️ 2.1K · Nature'},
+    ]
+    
+    return render(request, 'landing.html', {
+        'trending_posts': trending_posts,
+        'top_explorers': top_explorers,
+        'placeholder_destinations': placeholder_destinations,
+        'show_footer': False,
+    })
+
+
 def landing(request):
     if request.user.is_authenticated:
         return redirect('feed')
-    from .services import community_highlights, top_explorers, trending_posts
-    return render(request, 'landing.html', {
-        'trending': trending_posts(6),
-        'top_explorers': top_explorers(6),
-        'highlights': community_highlights(4),
-    })
+    return home_view(request)
 
 
 @login_required
@@ -152,17 +178,24 @@ def feed(request):
     page = request.GET.get('page', 1)
     category = request.GET.get('category')
     posts = _feed_posts(request.user, page, category=category)
-    all_for_map = list(posts.object_list) if hasattr(posts, 'object_list') else list(posts)
     map_markers = map_markers_from_posts(
-        Post.objects.filter(is_hidden_gem=True).select_related('author')[:30]
+        Post.objects.filter(is_hidden_gem=True).select_related('author')[:50]
     )
-    feed_reels = Reel.objects.select_related('author', 'author__profile').all()[:6]
-    stories = Profile.objects.select_related('user').filter(
-        user__posts__isnull=False
-    ).distinct().order_by('-explorer_score')[:15]
+
+    # Instagram-style Stories: prioritizing followed users
+    stories = Profile.objects.filter(
+        user__followers_set__follower=request.user
+    ).select_related('user').distinct()
+    
+    # Fallback to active explorers if user follows no one
+    if not stories.exists():
+        stories = Profile.objects.select_related('user').filter(
+            user__posts__isnull=False
+        ).distinct().order_by('-explorer_score')[:15]
+
     ctx = {
         'posts': posts,
-        'feed_reels': feed_reels,
+        # Removed feed_reels to keep Feed exclusive to posts and stories
         'stories': stories,
         'map_markers_json': json.dumps(map_markers),
         'demo_destinations': DEMO_DESTINATIONS,
@@ -284,24 +317,25 @@ def create_post(request):
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            images = request.FILES.getlist('images')
-            video = request.FILES.get('video')
-            if not images and not video:
-                messages.error(request, 'Please upload at least one image or a video.')
-                return render(request, 'create_post.html', {'form': form, **_sidebar_context(request)})
-            for idx, img in enumerate(images):
-                validate_image_upload(img)
-                PostImage.objects.create(post=post, image=img, order=idx)
-            if video and not images:
-                messages.info(request, 'Video noted — upload a dedicated Reel for best playback.')
-            _stamp_from_post(request.user, post)
-            _geocode_post(post)
-            update_post_gem_score(post)
-            request.user.profile.recalculate_explorer_score()
-            sync_user_achievements(request.user)
+            with transaction.atomic():
+                post = form.save(commit=False)
+                post.author = request.user
+                post.save()
+                images = request.FILES.getlist('images')
+                video = request.FILES.get('video')
+                if not images and not video:
+                    messages.error(request, 'Please upload at least one image or a video.')
+                    return render(request, 'create_post.html', {'form': form, **_sidebar_context(request)})
+                for idx, img in enumerate(images):
+                    validate_image_upload(img)
+                    PostImage.objects.create(post=post, image=img, order=idx)
+                if video and not images:
+                    messages.info(request, 'Video noted — upload a dedicated Reel for best playback.')
+                _stamp_from_post(request.user, post)
+                _geocode_post(post)
+                update_post_gem_score(post)
+                request.user.profile.recalculate_explorer_score()
+                sync_user_achievements(request.user)
             messages.success(request, 'Your travel post is live!')
             return redirect('feed')
         messages.error(request, 'Please correct the errors below.')
@@ -368,23 +402,30 @@ def blog_detail(request, slug):
 
 @login_required
 def reels_view(request):
-    reels = Reel.objects.select_related('author', 'author__profile').all()
-    guide_cities = set()
-    for guide in GuideProfile.objects.filter(availability_status=True):
-        for city in guide.expertise_cities:
-            guide_cities.add(city.strip().lower())
+    reels = Reel.objects.select_related(
+        'author', 'author__profile'
+    ).order_by('-created_at')
 
-    guide_reel_ids = [
-        reel.id
-        for reel in reels
-        if reel.location and any(city in reel.location.lower() for city in guide_cities)
-    ]
+    liked_reels = set(
+        ReelLike.objects.filter(user=request.user).values_list('reel_id', flat=True)
+    )
+
+    # Attach guide reel ids (reels whose author has a guide profile)
+    guide_author_ids = set(
+        GuideProfile.objects.values_list('user_id', flat=True)
+    )
+    guide_reel_ids = set(
+        r.id for r in reels if r.author_id in guide_author_ids
+    )
 
     return render(request, 'reels.html', {
         'reels': reels,
+        'liked_reels': liked_reels,
         'guide_reel_ids': guide_reel_ids,
-        **_sidebar_context(request),
+        'show_footer': False,
+        'active_page': 'reels',
     })
+
 
 
 @login_required
@@ -433,33 +474,30 @@ def search_view(request):
 
 @login_required
 def bucket_list_view(request):
-    items = request.user.bucket_list.select_related('post').all()
-    if request.method == 'POST':
-        form = BucketListForm(request.POST)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.user = request.user
-            item.save()
-            sync_user_achievements(request.user)
-            messages.success(request, f'Added {item.destination_name} to your travel planner.')
-            return redirect('bucket_list')
-        messages.error(request, 'Could not add destination. Please check the form.')
-    else:
-        form = BucketListForm()
-    travel_stats = get_travel_statistics(request.user)
+    saved = SavedPost.objects.filter(
+        user=request.user
+    ).select_related('post','post__author').order_by('-saved_at')
     return render(request, 'bucket_list.html', {
-        'items': items,
-        'form': form,
-        'travel_stats': travel_stats,
-        **_sidebar_context(request),
+        'saved_items': saved,
+        'show_footer': False,
+        'active_page': 'bucketlist',
     })
 
 
 @login_required
 def notifications_view(request):
-    notifs = request.user.notifications.select_related('actor', 'post').all()[:50]
-    request.user.notifications.filter(is_read=False).update(is_read=True)
-    return render(request, 'notifications.html', {'notifications': notifs, **_sidebar_context(request)})
+    if request.GET.get('mark_read'):
+        Notification.objects.filter(
+            recipient=request.user, is_read=False
+        ).update(is_read=True)
+    notifs = Notification.objects.filter(
+        recipient=request.user
+    ).select_related('actor','post').order_by('-created_at')[:50]
+    return render(request, 'notifications.html', {
+        'notifications': notifs,
+        'show_footer': False,
+        'active_page': 'notifications',
+    })
 
 
 @login_required
@@ -476,11 +514,29 @@ def passport_view(request):
             {'country': c, 'x': coords[0], 'y': coords[1], 'city': '', 'demo': True}
             for c, coords in list(COUNTRY_MAP_PINS.items())[:8]
         ]
+        
+    user_post_locations = []
+    user_posts = Post.objects.filter(author=request.user, latitude__isnull=False, longitude__isnull=False)
+    for p in user_posts:
+        user_post_locations.append({
+            'lat': float(p.latitude),
+            'lng': float(p.longitude),
+            'location': p.location,
+            'image_url': p.get_image()
+        })
+    if not user_post_locations:
+        user_post_locations = [
+            {'lat': 11.4102, 'lng': 76.6950, 'location': 'Ooty, India', 'image_url': 'https://images.unsplash.com/photo-1470770903676-69b98201ea1c?w=800'},
+            {'lat': 32.2396, 'lng': 77.1887, 'location': 'Manali, India', 'image_url': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'},
+            {'lat': 15.3350, 'lng': 76.4600, 'location': 'Hampi, India', 'image_url': 'https://images.unsplash.com/photo-1590123715937-d26beb66a374?w=800'}
+        ]
+
     return render(request, 'passport.html', {
         'stamps': stamps,
         'by_country': by_country,
         'travel_stats': travel_stats,
         'map_pins': map_pins,
+        'user_post_locations_json': json.dumps(user_post_locations),
         'timeline': stamps[:20],
         **_sidebar_context(request),
     })
@@ -535,6 +591,9 @@ def toggle_reel_like(request, reel_id):
         liked = False
     else:
         liked = True
+        _notify(reel.author, request.user, 'like', f'{request.user.username} liked your reel', reel=reel)
+        reel.author.profile.recalculate_explorer_score()
+
     return JsonResponse({
         'ok': True,
         'liked': liked,
@@ -625,7 +684,9 @@ def toggle_save_post(request, post_id):
     else:
         saved = True
     update_post_gem_score(post)
-    return JsonResponse({'ok': True, 'saved': saved, 'gem_score': post.hidden_gem_score})
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+        return JsonResponse({'ok': True, 'saved': saved, 'gem_score': post.hidden_gem_score})
+    return redirect(request.META.get('HTTP_REFERER', 'bucket_list'))
 
 
 @login_required
@@ -667,7 +728,27 @@ def post_detail(request, pk):
     post.user_saved = SavedPost.objects.filter(user=request.user, post=post).exists()
     post.author_is_followed = Follow.objects.filter(follower=request.user, following=post.author).exists()
     update_post_gem_score(post)
-    ctx = {'post': post, 'comments': comments}
+    
+    # First-timer guide banner logic
+    city_name = post.city or post.location
+    user_has_posts_here = False
+    if request.user.is_authenticated:
+        user_has_posts_here = Post.objects.filter(author=request.user).filter(
+            Q(city__iexact=city_name) | Q(location__icontains=city_name)
+        ).exists()
+    show_guide_banner = not user_has_posts_here
+
+    # Destination info widget
+    destination_info = Destination.objects.filter(
+        Q(name__iexact=city_name) | Q(city__iexact=city_name)
+    ).first()
+
+    ctx = {
+        'post': post,
+        'comments': comments,
+        'show_guide_banner': show_guide_banner,
+        'destination_info': destination_info,
+    }
     ctx.update(_sidebar_context(request))
     return render(request, 'post_detail.html', ctx)
 
@@ -724,6 +805,7 @@ def community_hub(request):
     map_markers = map_markers_from_posts(
         Post.objects.filter(is_hidden_gem=True).select_related('author')[:50]
     )
+    help_requests = TouristHelpRequest.objects.filter(is_resolved=False)[:10]
     user_groups = TravelGroup.objects.filter(
         memberships__user=request.user
     ) if request.user.is_authenticated else TravelGroup.objects.none()
@@ -734,8 +816,48 @@ def community_hub(request):
         'groups': groups,
         'events': events,
         'guides': guides,
+        'help_requests': help_requests,
         'user_groups': user_groups,
         'map_markers_json': json.dumps(map_markers),
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+def community_view(request):
+    from .models import UserProfile
+    buddy_trips = TravelCompanion.objects.filter(is_active=True).select_related('user', 'user__profile')
+    chat_rooms = ChatRoom.objects.all()
+    groups = TravelGroup.objects.all()
+    events = CommunityEvent.objects.filter(is_active=True).select_related('organizer')
+    guides = GuideProfile.objects.filter(is_verified=True).select_related('user', 'user__profile')
+    top = UserProfile.objects.select_related('user').order_by('-explorer_score')[:12]
+    
+    user_groups = TravelGroup.objects.none()
+    if request.user.is_authenticated:
+        user_groups = TravelGroup.objects.filter(memberships__user=request.user)
+
+    return render(request, 'community.html', {
+        'buddy_trips': buddy_trips,
+        'chat_rooms': chat_rooms,
+        'groups': groups,
+        'events': events,
+        'guides': guides,
+        'top_explorers': top,
+        'user_groups': user_groups,
+        'show_footer': False,
+        'active_page': 'community',
+        **_sidebar_context(request),
+    })
+
+
+@login_required
+def guides_view(request):
+    guides = GuideProfile.objects.filter(is_verified=True).select_related('user', 'user__profile')
+    return render(request, 'guides.html', {
+        'guides': guides,
+        'show_footer': False,
+        'active_page': 'guides',
         **_sidebar_context(request),
     })
 

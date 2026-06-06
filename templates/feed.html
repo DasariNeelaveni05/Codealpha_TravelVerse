@@ -4,16 +4,39 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <link rel="stylesheet" href="{% static 'css/feed.css' %}">
+<style>
+.feed-wrapper, .feed-container, .main-feed, .content-area {
+    padding-top: 80px !important;
+}
+.stories-row {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+    background: #fff !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+}
+.stories-row::-webkit-scrollbar { display: none; }
+.story-item { flex-shrink: 0 !important; cursor: pointer; }
+</style>
 {% endblock %}
 
 {% block content %}
 <!-- Stories Bar -->
 <div class="ig-stories-bar glass-card">
-  <div class="ig-stories-scroll">
+  <div class="ig-stories-scroll stories-row">
     <!-- Your Story -->
     {% if user.is_authenticated %}
-    <a href="{% url 'create_post' %}" class="ig-story-item ig-story-add">
-      <div class="ig-story-avatar-ring add-ring">
+    <a href="{% url 'create_post' %}" class="ig-story-item ig-story-add story-item">
+      <div class="ig-story-avatar-ring add-ring" 
+           data-story-username="Your Story" 
+           data-story-avatar="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://i.pravatar.cc/150?u={{ user.username }}{% endif %}"
+           data-story-img="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://i.pravatar.cc/150?u={{ user.username }}{% endif %}">
         {% if user.profile.avatar %}
         <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
         {% else %}
@@ -28,8 +51,11 @@
     <!-- Other Stories -->
     {% for profile in stories %}
     {% if profile.user != user %}
-    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item">
-      <div class="ig-story-avatar-ring {% if profile.explorer_score > 100 %}active-ring{% endif %}">
+    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item story-item">
+      <div class="ig-story-avatar-ring active-ring" 
+           data-story-username="{{ profile.user.username }}" 
+           data-story-avatar="{{ profile.get_avatar }}" 
+           data-story-img="{{ profile.get_avatar }}">
         {% if profile.avatar %}
         <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
         {% else %}
@@ -42,8 +68,11 @@
     {% endfor %}
 
     {% for profile in top_explorers %}
-    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item">
-      <div class="ig-story-avatar-ring active-ring">
+    <a href="{% url 'profile' profile.user.username %}" class="ig-story-item story-item">
+      <div class="ig-story-avatar-ring active-ring"
+           data-story-username="{{ profile.user.username }}" 
+           data-story-avatar="{{ profile.get_avatar }}" 
+           data-story-img="{{ profile.get_avatar }}">
         {% if profile.avatar %}
         <img src="{{ profile.avatar.url }}" alt="{{ profile.user.username }}">
         {% else %}
@@ -55,36 +84,6 @@
     {% endfor %}
   </div>
 </div>
-
-<!-- Feed Reels Carousel -->
-{% if feed_reels %}
-<div class="ig-reels-bar glass-card">
-  <div class="ig-reels-header">
-    <h3>Reels</h3>
-    <a href="{% url 'reels' %}" class="ig-see-all">See All</a>
-  </div>
-  <div class="ig-reels-scroll">
-    {% for reel in feed_reels %}
-    <a href="{% url 'reels' %}" class="ig-reel-card">
-      <div class="ig-reel-thumb">
-        {% if reel.thumbnail %}
-        <img src="{{ reel.thumbnail.url }}" alt="{{ reel.title }}">
-        {% elif reel.thumbnail_url %}
-        <img src="{{ reel.thumbnail_url }}" alt="{{ reel.title }}">
-        {% else %}
-        <div class="ig-reel-placeholder">🎬</div>
-        {% endif %}
-        <div class="ig-reel-play">▶</div>
-        <div class="ig-reel-info">
-          <span class="ig-reel-likes">❤️ {{ reel.like_count }}</span>
-        </div>
-      </div>
-      <span class="ig-reel-author">@{{ reel.author.username|truncatechars:12 }}</span>
-    </a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
 
 <!-- Category Filter Pills -->
 <div class="ig-category-pills">
@@ -110,6 +109,21 @@
     {% endfor %}
   </div>
   <div id="feed-loader" class="loader hidden">Loading more gems...</div>
+</div>
+
+<!-- Story Viewer Modal -->
+<div id="story-viewer" class="story-viewer-overlay hidden">
+    <div class="story-viewer-content">
+        <div class="story-progress-container"><div id="story-progress" class="story-progress-bar"></div></div>
+        <div class="story-viewer-header">
+            <img id="story-viewer-avatar" src="" alt="">
+            <span id="story-viewer-username"></span>
+            <span class="story-close">&times;</span>
+        </div>
+        <div class="story-media">
+            <img id="story-viewer-img" src="" alt="">
+        </div>
+    </div>
 </div>
 {% endblock %}
 

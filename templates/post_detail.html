@@ -1,22 +1,160 @@
 {% extends 'app_base.html' %}
-{% block title %}{{ post.location }}{% endblock %}
+{% block title %}{{ post.location }} | Details{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+  details summary::-webkit-details-marker { display:none; }
+</style>
+{% endblock %}
+
 {% block main %}
 <div data-share-url="{% url 'post_detail' post.pk %}">
-{% include 'partials/feed_post.html' %}
+  {% include 'partials/feed_post.html' %}
 </div>
-<section class="comments-section">
-  <h2>Comments</h2>
-  <ul class="comment-list" id="comments-{{ post.id }}">
+
+<!-- First-Timer Guide Banner -->
+{% if show_guide_banner %}
+<div class="first-timer-banner" style="background: linear-gradient(135deg, #2B6CB0, #38B2AC); color: #fff; padding: 16px; border-radius: 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 14px rgba(43,108,176,0.25);">
+  <div>
+    <strong style="font-size:15px;display:block;margin-bottom:2px;">🌟 First time in {{ post.location }}?</strong>
+    <span style="font-size:12px;opacity:0.9;">Find a verified local guide to unlock hidden trails and secret spots.</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+    <a href="{% url 'guides' %}?city={{ post.city|urlencode }}" style="background:#fff;color:#2B6CB0;padding:8px 16px;border-radius:20px;font-weight:800;font-size:12px;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,0.1);">Find Local Guide →</a>
+    <button class="dismiss-banner" style="background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;padding:4px;" onclick="this.parentElement.parentElement.remove()">✕</button>
+  </div>
+</div>
+{% endif %}
+
+<!-- Destination Info Widget -->
+{% if destination_info %}
+<details class="glass-card" style="padding: 16px; border-radius: 16px; margin: 16px 0; background:#fff; border:1px solid rgba(43,108,176,0.1); cursor:pointer;">
+  <summary style="font-weight: 800; font-size: 15px; display: flex; justify-content: space-between; align-items: center; outline:none;">
+    <span>📍 Collapsible: About {{ post.location }}</span>
+    <span style="font-size: 11px; color: #718096; background:#edf2f7; padding:4px 10px; border-radius:12px;">Tap to Expand</span>
+  </summary>
+  <div style="margin-top: 16px; font-size: 13px; line-height:1.6; color: #4A5568; cursor:default;" onclick="event.stopPropagation()">
+    <p style="margin-bottom: 14px; font-weight:500;">{{ destination_info.description }}</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; border-top:1px solid #edf2f7; padding-top:14px;">
+      <div><strong>📅 Best Time to Visit:</strong><br>{{ destination_info.best_time }}</div>
+      <div><strong>💰 Budget Estimate:</strong><br>{{ destination_info.budget_per_day }}</div>
+      <div><strong>🗣️ Language & Communication:</strong><br>{{ destination_info.language_tip }}</div>
+      <div><strong>🚗 How to Reach:</strong><br>{{ destination_info.how_to_reach }}</div>
+      <div style="grid-column: 1/-1;"><strong>🧆 Local Foods to Try:</strong><br>{{ destination_info.local_food }}</div>
+      <div style="grid-column: 1/-1; border-top:1px solid #edf2f7; padding-top:8px;"><strong>🛡️ Safety & Travel Tips:</strong><br>{{ destination_info.safety_tips }}</div>
+    </div>
+  </div>
+</details>
+{% endif %}
+
+<!-- Location Map -->
+{% if post.latitude and post.longitude %}
+<div class="page-card glass-card" style="padding:16px; border-radius:16px; margin:16px 0; background:#fff; border:1px solid rgba(43,108,176,0.1);">
+  <h3 style="margin-bottom:12px; font-size:15px; font-weight:800; color:#1a202c;">🗺️ Location Map</h3>
+  <div id="post-map" style="height:280px; border-radius:12px; z-index:0;"></div>
+</div>
+{% endif %}
+
+<section class="comments-section glass-card" style="padding:20px; border-radius:16px; margin-top:20px; background:#fff; border:1px solid rgba(43,108,176,0.1);">
+  <h2 style="font-size:16px; font-weight:800; margin-bottom:16px; color:#1a202c;">💬 Comments ({{ comments|length }})</h2>
+  <ul class="comment-list" id="comments-{{ post.id }}" style="list-style:none; padding:0; display:flex; flex-direction:column; gap:12px;">
     {% for c in comments %}
-    <li>
-      <strong>@{{ c.user.username }}</strong> {{ c.text }}
-      <ul class="replies">
+    <li style="border-bottom:1px solid #edf2f7; padding-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+        <span style="font-weight:800; font-size:13px;">@{{ c.user.username }}</span>
+        <span style="font-size:10px; color:#a0aec0;">{{ c.created_at|date:"M d, g:i A" }}</span>
+      </div>
+      <div style="font-size:13px; color:#4a5568; padding-left:2px;">{{ c.text }}</div>
+      
+      {% if c.replies.all %}
+      <ul class="replies" style="list-style:none; padding-left:16px; border-left:2px solid #edf2f7; margin-top:8px; display:flex; flex-direction:column; gap:8px;">
         {% for r in c.replies.all %}
-        <li><strong>@{{ r.user.username }}</strong> {{ r.text }}</li>
+        <li>
+          <div style="font-weight:700; font-size:12px; margin-bottom:2px;">@{{ r.user.username }}</div>
+          <div style="font-size:12px; color:#4a5568;">{{ r.text }}</div>
+        </li>
         {% endfor %}
       </ul>
+      {% endif %}
     </li>
+    {% empty %}
+    <li style="color:#718096; font-size:13px;">No comments yet. Share your thoughts!</li>
     {% endfor %}
   </ul>
+
+  <!-- Add Comment Form -->
+  {% if user.is_authenticated %}
+  <form id="comment-form-{{ post.id }}" style="display:flex; gap:8px; margin-top:16px;">
+    {% csrf_token %}
+    <input type="text" name="text" placeholder="Add a comment..." required
+           style="flex:1; padding:8px 14px; border:1.5px solid #edf2f7; border-radius:20px; font-size:13px; outline:none; background:#f7fafc;">
+    <button type="submit" style="background:linear-gradient(135deg,#2B6CB0,#38B2AC); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:700; font-size:12px; cursor:pointer;">Post</button>
+  </form>
+  <script>
+    document.getElementById('comment-form-{{ post.id }}').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const input = form.querySelector('input[name=text]');
+      const text = input.value.trim();
+      if (!text) return;
+
+      try {
+        const res = await fetch(`/api/comment/{{ post.id }}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams({ text })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const list = document.getElementById('comments-{{ post.id }}');
+          const li = document.createElement('li');
+          li.style.cssText = 'border-bottom:1px solid #edf2f7; padding-bottom:12px;';
+          li.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="font-weight:800; font-size:13px;">@${data.comment.user}</span>
+              <span style="font-size:10px; color:#a0aec0;">Just now</span>
+            </div>
+            <div style="font-size:13px; color:#4a5568; padding-left:2px;">${data.comment.text}</div>
+          `;
+          list.appendChild(li);
+          input.value = '';
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  </script>
+  {% endif %}
 </section>
+{% endblock %}
+
+{% block extra_js %}
+{% if post.latitude and post.longitude %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const map = L.map('post-map').setView([{{ post.latitude }}, {{ post.longitude }}], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    const icon = L.divIcon({
+      html: `<div style="background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+              color:white;border-radius:50%;width:32px;height:32px;
+              display:flex;align-items:center;justify-content:center;
+              font-size:16px;border:3px solid #fff;
+              box-shadow:0 2px 8px rgba(0,0,0,0.3)">📍</div>`,
+      iconSize: [32, 32], iconAnchor: [16, 16], className: ''
+    });
+    L.marker([{{ post.latitude }}, {{ post.longitude }}], {icon})
+      .addTo(map)
+      .bindPopup(`<b>{{ post.location }}</b><br>⭐ Gem Score: {{ post.hidden_gem_score }}/100`)
+      .openPopup();
+  });
+</script>
+{% endif %}
 {% endblock %}

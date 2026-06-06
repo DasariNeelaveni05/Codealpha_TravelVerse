@@ -1,0 +1,447 @@
+{% extends 'app_base.html' %}
+{% load static %}
+{% block title %}Find Local Guides | TravelVerse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+/* ══ Page wrapper ══════════════════════════════════════ */
+.guides-page { max-width: 960px; margin: 0 auto; padding: 0 0 80px; }
+
+/* ══ Hero ══════════════════════════════════════════════ */
+.guides-hero {
+  border-radius: 24px; overflow: hidden; position: relative;
+  height: 260px; margin-bottom: 32px;
+  display: flex; align-items: center; justify-content: center;
+}
+.guides-hero-bg {
+  position:absolute; inset:0;
+  background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=70') center/cover;
+}
+.guides-hero-overlay {
+  position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(15,52,96,0.88) 0%, rgba(26,115,232,0.70) 100%);
+}
+.guides-hero-content {
+  position: relative; text-align: center; color: #fff; padding: 20px;
+}
+.guides-hero-content h1 {
+  font-size: 32px; font-weight: 900; margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.guides-hero-content p {
+  font-size: 15px; opacity: 0.88; margin-bottom: 24px;
+}
+.guides-hero-search {
+  display: flex; max-width: 500px; margin: 0 auto; gap: 8px;
+}
+.guides-hero-search input {
+  flex: 1; padding: 13px 20px; border-radius: 30px; border: none;
+  font-size: 14px; outline: none; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.guides-hero-search button {
+  padding: 13px 24px; border-radius: 30px; font-weight: 700; font-size: 14px;
+  background: linear-gradient(135deg, #F6AD55, #ED8936); color: #fff; border: none;
+  cursor: pointer; white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.guides-hero-search button:hover { opacity: 0.88; }
+
+/* ══ Stats bar ════════════════════════════════════════ */
+.guides-stats {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.guide-stat-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border-radius: 30px; padding: 8px 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); font-size: 13px; font-weight: 700;
+}
+.guide-stat-chip span { color: #2B6CB0; font-size: 20px; font-weight: 900; }
+
+/* ══ Filter row ═══════════════════════════════════════ */
+.guides-filter-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;
+}
+.filter-label { font-size: 13px; font-weight: 700; color: #718096; }
+.filter-pill {
+  padding: 6px 16px; border-radius: 30px; font-size: 12px; font-weight: 700;
+  border: 1.5px solid #e5e7eb; background: #fff; color: #718096;
+  cursor: pointer; transition: all 0.2s;
+}
+.filter-pill.active, .filter-pill:hover {
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  border-color: transparent; color: #fff;
+}
+.sort-select {
+  margin-left: auto; padding: 7px 14px; border-radius: 20px;
+  border: 1.5px solid #e5e7eb; font-size: 13px; background: #fff;
+  cursor: pointer; outline: none;
+}
+
+/* ══ Map ═════════════════════════════════════════════ */
+#guides-map-full {
+  height: 300px; border-radius: 20px; margin-bottom: 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); z-index: 0;
+}
+
+/* ══ Guide grid ═══════════════════════════════════════ */
+.guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ══ Guide card ═══════════════════════════════════════ */
+.guide-card {
+  background: #fff; border-radius: 22px; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s;
+  position: relative;
+}
+.guide-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 36px rgba(43,108,176,0.18);
+}
+
+.guide-banner {
+  height: 120px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  position: relative;
+  background-size: cover; background-position: center;
+}
+.guide-banner::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.5));
+}
+.guide-badge-row {
+  position: absolute; top: 10px; right: 10px; z-index: 1; display: flex; gap: 6px;
+}
+.guide-verified {
+  background: linear-gradient(135deg, #2B6CB0, #38B2AC);
+  color: #fff; font-size: 10px; font-weight: 800;
+  padding: 3px 10px; border-radius: 20px;
+}
+.guide-avail-badge {
+  font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px;
+}
+.guide-avail-badge.yes { background: #C6F6D5; color: #276749; }
+.guide-avail-badge.no  { background: #FED7D7; color: #9B2C2C; }
+
+.guide-avatar-wrap {
+  position: absolute; bottom: -36px; left: 20px; z-index: 2;
+}
+.guide-avatar {
+  width: 78px; height: 78px; border-radius: 50%;
+  border: 4px solid #fff;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+
+.guide-body { padding: 46px 20px 20px; }
+
+.guide-name {
+  font-weight: 900; font-size: 18px; margin-bottom: 2px; color: #1a202c;
+}
+.guide-city {
+  font-size: 12px; color: #718096; margin-bottom: 6px;
+}
+.guide-rating-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.guide-stars {
+  font-size: 13px; font-weight: 700; color: #F6AD55;
+}
+.guide-tours { font-size: 12px; color: #718096; }
+.guide-price-badge {
+  margin-left: auto;
+  background: linear-gradient(135deg, #F6AD55, #ED8936);
+  color: #fff; font-size: 12px; font-weight: 800;
+  padding: 3px 10px; border-radius: 20px;
+}
+
+.guide-speciality {
+  font-size: 12px; color: #2B6CB0; font-weight: 700; margin-bottom: 8px;
+  background: rgba(43,108,176,0.08); padding: 4px 10px; border-radius: 10px;
+  display: inline-block;
+}
+.guide-languages {
+  font-size: 12px; color: #718096; margin-bottom: 8px;
+}
+.guide-bio-text {
+  font-size: 12px; color: #718096; line-height: 1.6; margin-bottom: 12px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.guide-dests {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px;
+}
+.dest-tag {
+  background: #EBF8FF; color: #2B6CB0;
+  font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 10px;
+}
+
+.guide-cta-row { display: flex; gap: 8px; }
+.btn-wa-full {
+  flex: 2; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 0; border-radius: 14px; font-weight: 700; font-size: 13px;
+  background: #25D366; color: #fff; text-decoration: none;
+  transition: opacity 0.2s;
+}
+.btn-wa-full:hover { opacity: 0.85; }
+.btn-view-full {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 11px 0; border-radius: 14px; font-weight: 700; font-size: 13px;
+  background: #EBF8FF; color: #2B6CB0; text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-view-full:hover { background: #BEE3F8; }
+
+/* ══ Empty state ══════════════════════════════════════ */
+.guides-empty {
+  text-align: center; padding: 80px 20px; background: #fff;
+  border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.guides-empty-icon { font-size: 72px; margin-bottom: 16px; }
+.guides-empty h2 { font-weight: 800; font-size: 22px; margin-bottom: 8px; }
+.guides-empty p { color: #718096; font-size: 14px; }
+</style>
+{% endblock %}
+
+{% block main %}
+<div class="guides-page">
+
+  <!-- Hero -->
+  <div class="guides-hero">
+    <div class="guides-hero-bg"></div>
+    <div class="guides-hero-overlay"></div>
+    <div class="guides-hero-content">
+      <h1>🧭 Find Your Perfect Local Guide</h1>
+      <p>Verified experts who know every hidden trail, backwater, and secret café.</p>
+      <div class="guides-hero-search">
+        <input type="text" id="hero-search" placeholder="Search by city, destination or name..."
+               value="{{ request.GET.city }}">
+        <button id="hero-search-btn">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="guides-stats">
+    <div class="guide-stat-chip">
+      <span>{{ guides|length }}</span> Verified Guides
+    </div>
+    <div class="guide-stat-chip">
+      <span>🌍</span> Pan India Coverage
+    </div>
+    <div class="guide-stat-chip">
+      <span>⭐</span> Avg 4.9 Rating
+    </div>
+    <div class="guide-stat-chip">
+      <span>💬</span> WhatsApp Direct Booking
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="guides-filter-row">
+    <span class="filter-label">Filter:</span>
+    <span class="filter-pill active" data-filter="all">All</span>
+    <span class="filter-pill" data-filter="budget">💰 Budget</span>
+    <span class="filter-pill" data-filter="premium">✨ Premium</span>
+    <span class="filter-pill" data-filter="available">🟢 Available</span>
+    <span class="filter-pill" data-filter="toprated">⭐ Top Rated 4.9+</span>
+    <select class="sort-select" id="guide-sort">
+      <option value="">Sort by</option>
+      <option value="rating">Highest Rating</option>
+      <option value="price_asc">Lowest Price</option>
+      <option value="price_desc">Highest Price</option>
+      <option value="tours">Most Tours</option>
+    </select>
+  </div>
+
+  <!-- Map -->
+  <div id="guides-map-full"></div>
+
+  <!-- Guides grid -->
+  {% if guides %}
+  <div class="guides-grid" id="guides-grid">
+    {% for guide in guides %}
+    <div class="guide-card"
+         data-name="{{ guide.user.first_name|lower }} {{ guide.user.last_name|lower }}"
+         data-city="{{ guide.city|lower }}"
+         data-dests="{{ guide.destinations|lower }}"
+         data-price="{{ guide.price_per_day }}"
+         data-rating="{{ guide.rating }}"
+         data-tours="{{ guide.total_tours }}"
+         data-available="{{ guide.is_available|yesno:'yes,no' }}">
+
+      <div class="guide-banner"
+           style="background-image:url('{{ guide.profile_image_url|default:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=60' }}');">
+        <div class="guide-badge-row">
+          {% if guide.is_verified %}<span class="guide-verified">✓ Verified</span>{% endif %}
+          <span class="guide-avail-badge {% if guide.is_available %}yes{% else %}no{% endif %}">
+            {% if guide.is_available %}Available{% else %}Busy{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="guide-avatar-wrap">
+        <img src="{{ guide.profile_image_url|default:'https://i.pravatar.cc/150?img=60' }}"
+             class="guide-avatar" alt="{{ guide.user.first_name }}">
+      </div>
+
+      <div class="guide-body">
+        <div class="guide-name">{{ guide.user.first_name }} {{ guide.user.last_name }}</div>
+        <div class="guide-city">📍 {{ guide.city }} · {{ guide.experience_years }} yrs experience</div>
+
+        <div class="guide-rating-row">
+          <span class="guide-stars">⭐ {{ guide.rating }}</span>
+          <span class="guide-tours">{{ guide.total_tours }} tours completed</span>
+          <span class="guide-price-badge">₹{{ guide.price_per_day }}/day</span>
+        </div>
+
+        {% if guide.speciality %}
+        <div class="guide-speciality">{{ guide.speciality }}</div>
+        {% endif %}
+
+        <div class="guide-languages">🗣 {{ guide.languages }}</div>
+
+        {% if guide.bio %}
+        <div class="guide-bio-text">{{ guide.bio }}</div>
+        {% endif %}
+
+        <div class="guide-dests">
+          {% for dest in guide.destinations.split ',' %}
+          <span class="dest-tag">{{ dest|strip }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="guide-cta-row">
+          {% if guide.whatsapp_number %}
+          <a href="https://wa.me/{{ guide.whatsapp_number|slice:'1:' }}"
+             target="_blank" rel="noopener" class="btn-wa-full">
+            📱 Book via WhatsApp
+          </a>
+          {% endif %}
+          <a href="{% url 'profile' guide.user.username %}" class="btn-view-full">
+            👤 View
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="guides-empty">
+    <div class="guides-empty-icon">🧭</div>
+    <h2>No Guides Yet</h2>
+    <p>Our verified guide network is growing. Check back soon!</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function() {
+  const grid = document.getElementById('guides-grid');
+
+  // ── Search (hero + live) ───────────────────────────
+  function filterGuides() {
+    const q = (document.getElementById('hero-search').value || '').toLowerCase();
+    if (!grid) return;
+    grid.querySelectorAll('.guide-card').forEach(card => {
+      const searchable = [card.dataset.name, card.dataset.city, card.dataset.dests].join(' ');
+      card.style.display = searchable.includes(q) ? '' : 'none';
+    });
+  }
+  document.getElementById('hero-search').addEventListener('input', filterGuides);
+  document.getElementById('hero-search-btn').addEventListener('click', filterGuides);
+
+  // Auto-run if URL has ?city param
+  if ('{{ request.GET.city }}'.trim()) filterGuides();
+
+  // ── Filter pills ────────────────────────────────────
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const f = pill.dataset.filter;
+      if (!grid) return;
+      grid.querySelectorAll('.guide-card').forEach(card => {
+        let show = true;
+        if (f === 'budget')    show = parseFloat(card.dataset.price) < 1700;
+        if (f === 'premium')   show = parseFloat(card.dataset.price) >= 2000;
+        if (f === 'available') show = card.dataset.available === 'yes';
+        if (f === 'toprated')  show = parseFloat(card.dataset.rating) >= 4.9;
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  // ── Sort ────────────────────────────────────────────
+  document.getElementById('guide-sort').addEventListener('change', (e) => {
+    if (!grid) return;
+    const cards = [...grid.querySelectorAll('.guide-card')];
+    const sort = e.target.value;
+    cards.sort((a, b) => {
+      if (sort === 'rating')     return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+      if (sort === 'price_asc')  return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+      if (sort === 'price_desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+      if (sort === 'tours')      return parseInt(b.dataset.tours) - parseInt(a.dataset.tours);
+      return 0;
+    });
+    cards.forEach(c => grid.appendChild(c));
+  });
+
+  // ── Leaflet map ────────────────────────────────────
+  const mapEl = document.getElementById('guides-map-full');
+  if (mapEl && window.L) {
+    const map = L.map('guides-map-full').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 14
+    }).addTo(map);
+
+    const CITY_COORDS = {
+      'Ooty':[11.4102,76.6950], 'Coorg':[12.3375,75.8069],
+      'Manali':[32.2396,77.1887], 'Spiti':[32.2461,78.0337],
+      'Hampi':[15.3350,76.4600], 'Goa':[15.2993,74.1240],
+      'Jaipur':[26.9124,75.7873], 'Alleppey':[9.4981,76.3388],
+      'Munnar':[10.0889,77.0595], 'Wayanad':[11.6854,76.1320],
+      'Leh':[34.1526,77.5770], 'Kodaikanal':[10.2381,77.4892],
+      'Kerala':[10.8505,76.2711], 'Kasol':[32.0993,77.3188],
+      'Thekkady':[9.6000,77.1667], 'Kovalam':[8.4000,76.9833],
+    };
+
+    if (grid) {
+      grid.querySelectorAll('.guide-card').forEach(card => {
+        const name  = card.dataset.name || 'Guide';
+        const city  = (card.dataset.city || '').trim();
+        const dests = (card.dataset.dests || '').split(',').map(d => d.trim());
+        const allPlaces = [city, ...dests];
+        let placed = false;
+
+        allPlaces.forEach(place => {
+          const key = Object.keys(CITY_COORDS).find(k => place.includes(k.toLowerCase()));
+          if (!key || placed) return;
+          placed = true;
+          const icon = L.divIcon({
+            html: `<div style="background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+                    color:#fff;border-radius:50%;width:36px;height:36px;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:17px;border:3px solid #fff;
+                    box-shadow:0 3px 10px rgba(0,0,0,0.25);">🧭</div>`,
+            iconSize:[36,36], iconAnchor:[18,18], className:''
+          });
+          L.marker(CITY_COORDS[key], { icon })
+           .addTo(map)
+           .bindPopup(`<b style="font-size:13px;">${name.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ')}</b><br>📍 ${key}<br>⭐ ${card.dataset.rating} · ₹${card.dataset.price}/day`);
+        });
+      });
+    }
+  }
+})();
+</script>
+{% endblock %}

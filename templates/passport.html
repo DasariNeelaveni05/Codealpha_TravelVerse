@@ -1,8 +1,12 @@
 {% extends 'app_base.html' %}
 {% load static %}
-{% block title %}Digital Passport{% endblock %}
+{% block title %}Digital Passport | TravelVerse{% endblock %}
 
-{% block content %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+{% endblock %}
+
+{% block main %}
 <!-- Full-width Stunning Hero Section -->
 <section class="hero-section" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80');">
   <div class="hero-overlay"></div>
@@ -60,7 +64,7 @@
     <!-- Map View -->
     <div class="page-card glass-card stagger-card" style="margin-bottom: 2.5rem; animation-delay: 0.2s;">
       <h3 style="margin-bottom: 0.75rem;">🗺️ Global Footprint Map</h3>
-      {% include 'partials/world_map.html' %}
+      <div id="passport-map" style="height:400px; border-radius:20px; z-index: 0;"></div>
     </div>
 
     <!-- Interactive Stamps Book (Killer differentiator for demos) -->
@@ -113,4 +117,34 @@
         {% endfor %}
       </ul>
     </div>
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const map = L.map('passport-map', {worldCopyJump:true}).setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Add visited locations from user's posts
+    const visited = {{ user_post_locations_json|safe }};  // list of {lat,lng,location,image_url}
+    visited.forEach(place => {
+      const icon = L.divIcon({
+        html:`<div style="background:linear-gradient(135deg,#2B6CB0,#38B2AC);
+              color:white;border-radius:50%;width:32px;height:32px;
+              display:flex;align-items:center;justify-content:center;
+              font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.3)">📍</div>`,
+        iconSize:[32,32], iconAnchor:[16,16], className: ''
+      });
+      L.marker([place.lat, place.lng], {icon})
+        .addTo(map)
+        .bindPopup(`<img src="${place.image_url}" style="width:140px;height:90px;
+                    object-fit:cover;border-radius:8px;"><br>
+                    <b>${place.location}</b>`);
+    });
+  });
+</script>
+{% endblock %}
+
 {% endblock %}
