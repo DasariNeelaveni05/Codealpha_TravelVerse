@@ -139,6 +139,199 @@
     👤<span class="mobile-tab-label">Login</span>
   </a>
   {% endif %}
+  <!-- More Tab -->
+  <button class="mobile-tab-link mobile-more-btn" id="mobileMoreBtn" onclick="toggleMobileMore()">
+    ☰<span class="mobile-tab-label">More</span>
+  </button>
 </div>
+
+<!-- Overlay backdrop -->
+<div class="mobile-more-overlay" id="mobileMoreOverlay" onclick="closeMobileMore()"></div>
+
+<!-- Slide-up More Drawer -->
+<div class="mobile-more-drawer" id="mobileMoreDrawer">
+  <div class="mobile-more-handle"></div>
+  <div class="mobile-more-header">
+    <span class="mobile-more-title">More Pages</span>
+    <button onclick="closeMobileMore()" class="mobile-more-close">✕</button>
+  </div>
+  <div class="mobile-more-grid">
+    <a href="{% url 'bucket_list' %}" class="mobile-more-item {% if active_page == 'bucket_list' %}active{% endif %}">
+      <span class="mobile-more-icon">🗺️</span>
+      <span class="mobile-more-label">Bucket List</span>
+    </a>
+    <a href="{% url 'passport' %}" class="mobile-more-item {% if active_page == 'passport' %}active{% endif %}">
+      <span class="mobile-more-icon">🛂</span>
+      <span class="mobile-more-label">Passport</span>
+    </a>
+    <a href="{% url 'guides' %}" class="mobile-more-item {% if active_page == 'guides' %}active{% endif %}">
+      <span class="mobile-more-icon">🧭</span>
+      <span class="mobile-more-label">Guides</span>
+    </a>
+    <a href="{% url 'community' %}" class="mobile-more-item {% if active_page == 'community' %}active{% endif %}">
+      <span class="mobile-more-icon">🌐</span>
+      <span class="mobile-more-label">Community</span>
+    </a>
+    <a href="{% url 'notifications' %}" class="mobile-more-item {% if active_page == 'notifications' %}active{% endif %}">
+      <span class="mobile-more-icon">🔔</span>
+      <span class="mobile-more-label">Notifications{% if unread_notifications %}<span class="more-notif-dot">{{ unread_notifications }}</span>{% endif %}</span>
+    </a>
+    <a href="{% url 'companions' %}" class="mobile-more-item {% if active_page == 'companions' %}active{% endif %}">
+      <span class="mobile-more-icon">🤝</span>
+      <span class="mobile-more-label">Companions</span>
+    </a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'profile_edit' %}" class="mobile-more-item {% if active_page == 'profile_edit' %}active{% endif %}">
+      <span class="mobile-more-icon">⚙️</span>
+      <span class="mobile-more-label">Settings</span>
+    </a>
+    <a href="{% url 'logout' %}" class="mobile-more-item" style="color:#E53E3E;">
+      <span class="mobile-more-icon">🚪</span>
+      <span class="mobile-more-label">Logout</span>
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+/* ── Mobile More Button ─────────────────────────────────── */
+.mobile-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 20px;
+  color: var(--text-secondary, #718096);
+}
+
+/* ── Mobile More Overlay ────────────────────────────────── */
+.mobile-more-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.mobile-more-overlay.open { display: block; }
+
+/* ── Mobile More Drawer ─────────────────────────────────── */
+.mobile-more-drawer {
+  position: fixed;
+  bottom: -100%;
+  left: 0; right: 0;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  z-index: 2100;
+  padding: 12px 20px 44px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+  transition: bottom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mobile-more-drawer.open { bottom: 0; }
+
+.mobile-more-handle {
+  width: 40px; height: 4px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  margin: 0 auto 16px;
+}
+.mobile-more-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.mobile-more-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a202c;
+}
+.mobile-more-close {
+  background: #f0f4f8;
+  border: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+}
+.mobile-more-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.mobile-more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: #4a5568;
+  background: #f7fafc;
+  border: 1.5px solid #edf2f7;
+  transition: all 0.18s ease;
+  position: relative;
+}
+.mobile-more-item:hover,
+.mobile-more-item.active {
+  background: linear-gradient(135deg, rgba(43,108,176,0.08), rgba(56,178,172,0.08));
+  border-color: #bee3f8;
+  color: #2B6CB0;
+  transform: translateY(-2px);
+}
+.mobile-more-icon { font-size: 26px; line-height: 1; }
+.mobile-more-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: inherit;
+}
+.more-notif-dot {
+  display: inline-block;
+  background: #E53E3E;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 8px;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
+/* Only show More button and drawer on mobile */
+@media (min-width: 769px) {
+  .mobile-more-btn,
+  .mobile-more-overlay,
+  .mobile-more-drawer { display: none !important; }
+}
+</style>
+
+<script>
+function toggleMobileMore() {
+  document.getElementById('mobileMoreOverlay').classList.toggle('open');
+  document.getElementById('mobileMoreDrawer').classList.toggle('open');
+}
+function closeMobileMore() {
+  document.getElementById('mobileMoreOverlay').classList.remove('open');
+  document.getElementById('mobileMoreDrawer').classList.remove('open');
+}
+// Swipe down to close
+(function() {
+  var drawer = document.getElementById('mobileMoreDrawer');
+  if (!drawer) return;
+  var startY = 0;
+  drawer.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, {passive: true});
+  drawer.addEventListener('touchend', function(e) {
+    if (e.changedTouches[0].clientY - startY > 60) { closeMobileMore(); }
+  }, {passive: true});
+})();
+</script>
 
 {% endblock %}
